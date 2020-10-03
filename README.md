@@ -6,7 +6,8 @@ SKT AI Fellowship 2기
 홀로렌즈 어플리케이션 개발
 
 ## 오늘의 그날
-![image](https://user-images.githubusercontent.com/52240990/94984622-d7d9d300-0588-11eb-99c0-f01ee33b485d.png)
+<img src="https://user-images.githubusercontent.com/52240990/94984622-d7d9d300-0588-11eb-99c0-f01ee33b485d.png" width="50%">
+<img src="https://user-images.githubusercontent.com/52240990/94984632-fc35af80-0588-11eb-8c61-d08b2a7438fc.png" width="50%">
 
 ## 개발환경
 * Hololens 10.0.17763.914 (RS5)
