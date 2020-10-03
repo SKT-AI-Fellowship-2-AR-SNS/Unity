@@ -1,9 +1,7 @@
 # Unity
 SKT AI Fellowship 2기
+- AR glass 얼굴인식 기반 SNS 앱 개발
 
-3. AR glass 얼굴인식 기반 SNS 앱 개발
-
-***
 
 ## 오늘의 그날
 홀로렌즈를 이용하여 얼굴인식을 통해 상대방의 추억을 공유할 수 있는 매개 플랫폼
