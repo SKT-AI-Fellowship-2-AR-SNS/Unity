@@ -44,6 +44,10 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     GameObject Time_Text;
     [SerializeField]
     GameObject InputField;
+    [SerializeField]
+    GameObject Private_Icon;
+    [SerializeField]
+    GameObject Tag_Icon;
 
     PhotoCapture photoCaptureObject = null;
     VideoCapture m_VideoCapture = null;
@@ -61,7 +65,27 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
 
     bool IsMyCapture = false;
     public bool camera;
-    
+    public bool IsPrivate = false;
+    public void OnPrivateClick()
+    {
+        if (Private_Icon.GetComponent<RawImage>().color.b == 1)
+        {
+            IsPrivate = true;
+            Private_Icon.GetComponent<RawImage>().color = new Color(1, 1, 0);
+            Tag_Icon.SetActive(false);
+        }
+        else
+        {
+            IsPrivate = false;
+            Private_Icon.GetComponent<RawImage>().color = new Color(1, 1, 1);
+            Tag_Icon.SetActive(true);
+        }
+        
+    }
+    public void OnTagClick()
+    {
+
+    }
     public void OnCameraClick()
     {
         if (HoloLensFaceDetectionExample.gameObject.activeSelf == true)
@@ -228,8 +252,8 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
         }
 
         Resolution cameraResolution = PhotoCapture.SupportedResolutions.OrderByDescending((res) => res.width * res.height).First();
-        targetTexture = new Texture2D(cameraResolution.width, cameraResolution.height);
 
+        print(cameraResolution);
         // Create a PhotoCapture object
         PhotoCapture.CreateAsync(false, delegate (PhotoCapture captureObject) {
             photoCaptureObject = captureObject;
@@ -266,10 +290,15 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     {
         VideoCapture_Icon.SetActive(false);
         VideoCapture_Icon2.SetActive(true);
+        
         Resolution cameraResolution = VideoCapture.SupportedResolutions.OrderByDescending((res) => res.width * res.height).First();
+        print(cameraResolution);
+        
         VideoCapture.CreateAsync(false, delegate (VideoCapture videoCapture) {
+            print("hi1");
             if (videoCapture != null)
             {
+                print("hi2");
                 m_VideoCapture = videoCapture;
                 float cameraFramerate = VideoCapture.GetSupportedFrameRatesForResolution(cameraResolution).OrderByDescending((fps) => fps).First();
 

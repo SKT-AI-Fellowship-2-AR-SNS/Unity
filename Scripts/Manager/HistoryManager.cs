@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using OpenCVForUnity.VideoModule;
+using UnityEditor.UIElements;
 
 public class HistoryManager : MonoBehaviour
 {
@@ -25,6 +26,12 @@ public class HistoryManager : MonoBehaviour
     GameObject MyHistory_LocMain;
     [SerializeField]
     GameObject MyHistory_LocHistory;
+    [SerializeField]
+    GameObject MyHistory_Comment;
+    [SerializeField]
+    GameObject MyHistoryEditPanel;
+    [SerializeField]
+    GameObject MyHistoryCommentPanel;
 
     [SerializeField]
     GameObject FriendLoc_Icon;
@@ -54,6 +61,14 @@ public class HistoryManager : MonoBehaviour
     GameObject MyHistory_Follow;
     [SerializeField]
     GameObject FollowContent;
+    [SerializeField]
+    GameObject FriendHistory_Comment;
+    [SerializeField]
+    GameObject FriendHistoryEditPanel;
+    [SerializeField]
+    GameObject FriendHistoryCommentPanel;
+
+
     LoginManager LM;
     CaptureManager CM;
 
@@ -75,6 +90,36 @@ public class HistoryManager : MonoBehaviour
     {
         //StartCoroutine("AllHistory", 1);
         //StartCoroutine("PreviewHistory", 1);
+    }
+    public void OnMyEditPanelClick()
+    {
+        if (MyHistoryEditPanel.activeSelf == true) MyHistoryEditPanel.SetActive(false);
+        else MyHistoryEditPanel.SetActive(true);
+    }
+    public void OnFriendEditPanelClick()
+    {
+        if (FriendHistoryEditPanel.activeSelf == true) FriendHistoryEditPanel.SetActive(false);
+        else FriendHistoryEditPanel.SetActive(true);
+    }
+    public void OnMyHistoryCommentClick()
+    {
+        MyHistory_LocHistory.SetActive(false);
+        MyHistory_Comment.SetActive(true);
+    }
+    public void OnMyHistoryCommentBackClick()
+    {
+        MyHistory_LocHistory.SetActive(true);
+        MyHistory_Comment.SetActive(false);
+    }
+    public void OnFriendHistoryCommentClick()
+    {
+        FriendHistory_LocHistory.SetActive(false);
+        FriendHistory_Comment.SetActive(true);
+    }
+    public void OnFriendHistoryCommentBackClick()
+    {
+        MyHistory_LocHistory.SetActive(true);
+        MyHistory_Comment.SetActive(false);
     }
     public void OnFollowClick()
     {
@@ -166,6 +211,7 @@ public class HistoryManager : MonoBehaviour
     }
     public void OnMyHistoyLocHistoryClick(GameObject g, JToken j)
     {
+        StartCoroutine(getComment(int.Parse(g.name)));
         if (LM.IsMyAlbum)
         {
             MyHistoryMain.SetActive(false);
@@ -185,6 +231,8 @@ public class HistoryManager : MonoBehaviour
                 MyHistory_LocHistory.transform.GetChild(4).GetComponent<VideoPlayer>().targetTexture = rt;
                 MyHistory_LocHistory.transform.GetChild(4).GetComponent<RawImage>().texture = rt;
             }
+            MyHistory_LocHistory.transform.GetChild(9).GetComponent<Text>().text = j["likes"].ToString();
+            MyHistory_LocHistory.transform.GetChild(3).GetComponent<Text>().text = j["location"].ToString();
             MyHistory_LocHistory.transform.GetChild(6).GetComponent<Text>().text = j["datetime"].ToString();
             MyHistory_LocHistory.transform.GetChild(7).GetComponent<Text>().text = j["day"].ToString();
             MyHistory_LocHistory.transform.GetChild(5).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>().text = j["text"].ToString();
@@ -208,10 +256,41 @@ public class HistoryManager : MonoBehaviour
                 FriendHistory_LocHistory.transform.GetChild(4).GetComponent<VideoPlayer>().targetTexture = rt;
                 FriendHistory_LocHistory.transform.GetChild(4).GetComponent<RawImage>().texture = rt;
             }
+            FriendHistory_LocHistory.transform.GetChild(9).GetComponent<Text>().text = j["likes"].ToString();
+            FriendHistory_LocHistory.transform.GetChild(3).GetComponent<Text>().text = j["location"].ToString();
             FriendHistory_LocHistory.transform.GetChild(6).GetComponent<Text>().text = j["datetime"].ToString();
             FriendHistory_LocHistory.transform.GetChild(7).GetComponent<Text>().text = j["day"].ToString();
             FriendHistory_LocHistory.transform.GetChild(5).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>().text = j["text"].ToString();
         }
+    }
+    IEnumerator getComment(int idx)
+    {
+        string url = "http://3.34.20.225:3000/history/getComment/" + idx;
+        List<IMultipartFormSection> form = new List<IMultipartFormSection>();
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        yield return request.SendWebRequest();
+        string result = request.downloadHandler.text;
+        var r = JObject.Parse(result);
+        //print(r);
+        var a = r["data"];
+        print(a);
+        print(a.First.SelectToken("profileImage").ToString());
+        if (a.HasValues)
+        {
+            if (LM.IsMyAlbum)
+            {
+                StartCoroutine(DownloadImage(a.First.SelectToken("profileImage").ToString(), MyHistoryCommentPanel.transform.GetChild(0).gameObject));
+                MyHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = a.First.SelectToken("name").ToString();
+                MyHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = a.First.SelectToken("comment").ToString();
+            }
+            else
+            {
+                StartCoroutine(DownloadImage(a.First.SelectToken("profileImage").ToString(), FriendHistoryCommentPanel.transform.GetChild(0).gameObject));
+                FriendHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = a.First.SelectToken("name").ToString();
+                FriendHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = a.First.SelectToken("comment").ToString();
+            }
+        }
+        
     }
     IEnumerator AllHistory(int[] id)
     {
@@ -221,7 +300,7 @@ public class HistoryManager : MonoBehaviour
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
-
+        print(r);
         FriendName_Text2.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
         url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
         StartCoroutine(DownloadImage(url, Friend_Image2));
@@ -234,10 +313,12 @@ public class HistoryManager : MonoBehaviour
             if (item["contents_type"].ToString().Equals("image"))
             {
                 g = Instantiate(Resources.Load("History")) as GameObject;
+                g.name = item["historyIdx"].ToString();
             }
             else
             {
                 g = Instantiate(Resources.Load("Video")) as GameObject;
+                g.name = item["historyIdx"].ToString();
                 list.Add(g);
             }
             if (LM.IsMyAlbum)
@@ -275,7 +356,7 @@ public class HistoryManager : MonoBehaviour
         StartCoroutine(DownloadImage(url, Friend_Image));
 
         var a = r["data"].SelectToken("history");
-        List<GameObject> list = new List<GameObject>();
+        //List<GameObject> list = new List<GameObject>();
         int check = 0;
         foreach (var item in a)
         {
@@ -286,11 +367,13 @@ public class HistoryManager : MonoBehaviour
             if (item["contents_type"].ToString().Equals("image"))
             {
                 g = Instantiate(Resources.Load("History")) as GameObject;
+                g.name = item["historyIdx"].ToString();
             }
             else
             {
                 g = Instantiate(Resources.Load("Video")) as GameObject;
-                list.Add(g);
+                g.name = item["historyIdx"].ToString();
+                //list.Add(g);
             }
             
             if (LM.IsMyAlbum)
