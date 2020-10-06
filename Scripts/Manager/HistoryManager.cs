@@ -32,6 +32,8 @@ public class HistoryManager : MonoBehaviour
     GameObject MyHistoryEditPanel;
     [SerializeField]
     GameObject MyHistoryCommentPanel;
+    [SerializeField]
+    GameObject MyHistoryCommentContent;
 
     [SerializeField]
     GameObject FriendLoc_Icon;
@@ -67,7 +69,8 @@ public class HistoryManager : MonoBehaviour
     GameObject FriendHistoryEditPanel;
     [SerializeField]
     GameObject FriendHistoryCommentPanel;
-
+    [SerializeField]
+    GameObject FriendHistoryCommentContent;
 
     LoginManager LM;
     CaptureManager CM;
@@ -105,21 +108,29 @@ public class HistoryManager : MonoBehaviour
     {
         MyHistory_LocHistory.SetActive(false);
         MyHistory_Comment.SetActive(true);
+        Vector2 v = new Vector2(0, 0);
+        StartCoroutine(LerpPosGeneral(v, MyHistory_Comment));
     }
     public void OnMyHistoryCommentBackClick()
     {
         MyHistory_LocHistory.SetActive(true);
+        Clear(MyHistoryCommentContent);
+        MyHistory_Comment.GetComponent<RectTransform>().localPosition = new Vector2(0, -255);
         MyHistory_Comment.SetActive(false);
     }
     public void OnFriendHistoryCommentClick()
     {
         FriendHistory_LocHistory.SetActive(false);
         FriendHistory_Comment.SetActive(true);
+        Vector2 v = new Vector2(0, 0);
+        StartCoroutine(LerpPosGeneral(v, FriendHistory_Comment));
     }
     public void OnFriendHistoryCommentBackClick()
     {
-        MyHistory_LocHistory.SetActive(true);
-        MyHistory_Comment.SetActive(false);
+        FriendHistory_LocHistory.SetActive(true);
+        Clear(FriendHistoryCommentContent);
+        FriendHistory_Comment.GetComponent<RectTransform>().localPosition = new Vector2(0, -255);
+        FriendHistory_Comment.SetActive(false);
     }
     public void OnFollowClick()
     {
@@ -288,6 +299,25 @@ public class HistoryManager : MonoBehaviour
                 StartCoroutine(DownloadImage(a.First.SelectToken("profileImage").ToString(), FriendHistoryCommentPanel.transform.GetChild(0).gameObject));
                 FriendHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = a.First.SelectToken("name").ToString();
                 FriendHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = a.First.SelectToken("comment").ToString();
+            }
+            foreach(var i in a)
+            {
+                GameObject g = Instantiate(Resources.Load("Comment_Panel")) as GameObject;
+                //g.GetComponent<RectTransform>().localPosition = new Vector3(120, -50, 0);
+                g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+                g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
+                if (LM.IsMyAlbum)
+                {
+                    g.transform.parent = MyHistoryCommentContent.transform;
+                    StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), g.transform.GetChild(0).gameObject));
+                }
+                else
+                {
+                    g.transform.parent = FriendHistoryCommentContent.transform;
+                    StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), g.transform.GetChild(0).gameObject));
+                }
+                g.transform.GetChild(3).GetComponent<Text>().text = i.SelectToken("name").ToString();
+                g.transform.GetChild(4).GetComponent<Text>().text = i.SelectToken("comment").ToString();
             }
         }
         
@@ -505,6 +535,17 @@ public class HistoryManager : MonoBehaviour
                 if (state == 0) FriendLoc_Panel.sizeDelta = Vector2.Lerp(FriendLoc_Panel.sizeDelta, v, progress);
                 else FriendTime_Panel.sizeDelta = Vector2.Lerp(FriendLoc_Panel.sizeDelta, v, progress);
             }
+            progress += increment;
+            yield return new WaitForSeconds(smoothness);
+        }
+    }
+    IEnumerator LerpPosGeneral(Vector2 v, GameObject g)
+    {
+        float progress = 0; //This float will serve as the 3rd parameter of the lerp function.
+        float increment = smoothness / duration; //The amount of change to apply.
+        while (progress < 1)
+        {
+            g.GetComponent<RectTransform>().localPosition = Vector2.Lerp(g.GetComponent<RectTransform>().localPosition, v, progress);
             progress += increment;
             yield return new WaitForSeconds(smoothness);
         }
