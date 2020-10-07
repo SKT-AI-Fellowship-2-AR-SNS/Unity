@@ -34,6 +34,16 @@ public class HistoryManager : MonoBehaviour
     GameObject MyHistoryCommentPanel;
     [SerializeField]
     GameObject MyHistoryCommentContent;
+    [SerializeField]
+    GameObject MyHeartIcon;
+    [SerializeField]
+    Text MyName_Text;
+    [SerializeField]
+    GameObject My_Image;
+    [SerializeField]
+    Text MyName_Text2;
+    [SerializeField]
+    GameObject My_Image2;
 
     [SerializeField]
     GameObject FriendLoc_Icon;
@@ -71,6 +81,17 @@ public class HistoryManager : MonoBehaviour
     GameObject FriendHistoryCommentPanel;
     [SerializeField]
     GameObject FriendHistoryCommentContent;
+    [SerializeField]
+    GameObject FriendHeartIcon;
+
+    [SerializeField]
+    GameObject MyPrevContent;
+    [SerializeField]
+    GameObject MyAllContent;
+    [SerializeField]
+    GameObject FriendPrevContent;
+    [SerializeField]
+    GameObject FreindAllContent;
 
     LoginManager LM;
     CaptureManager CM;
@@ -83,6 +104,8 @@ public class HistoryManager : MonoBehaviour
 
     int pageNum = 0;
 
+    public int curId = 0;
+
     void Awake()
     {
         LM = GameObject.Find("LoginManager").GetComponent<LoginManager>();
@@ -93,6 +116,48 @@ public class HistoryManager : MonoBehaviour
     {
         //StartCoroutine("AllHistory", 1);
         //StartCoroutine("PreviewHistory", 1);
+    }
+    public void OnMyHeartClick()
+    {
+        StartCoroutine(HeartClick());
+        if (MyHeartIcon.GetComponent<RawImage>().color.a == 75 / 255f) // 좋아요 선택
+        {
+            MyHeartIcon.GetComponent<RawImage>().color = new Color(1, 1, 1, 1);
+        }
+        else // 좋아요 취소
+        {
+            MyHeartIcon.GetComponent<RawImage>().color = new Color(1, 1, 1, 75/255f);
+        }
+    }
+    public void OnFriendHeartClick()
+    {
+        StartCoroutine(HeartClick());
+        if (FriendHeartIcon.GetComponent<RawImage>().color.a == 75 / 255f) // 좋아요 선택
+        {
+            FriendHeartIcon.GetComponent<RawImage>().color = new Color(1, 1, 1, 1);
+        }
+        else // 좋아요 취소
+        {
+            FriendHeartIcon.GetComponent<RawImage>().color = new Color(1, 1, 1, 75 / 255f);
+        }
+    }
+    IEnumerator HeartClick()
+    {
+        string url = "http://3.34.20.225:3000/history/like/1/" + curId;
+        byte[] data = null;
+        UnityWebRequest request = UnityWebRequest.Put(url, data);
+        yield return request.SendWebRequest();
+        string result = request.downloadHandler.text;
+        var r = JObject.Parse(result);
+        print(r);
+        if (LM.IsMyAlbum)
+        {
+            MyHistory_LocHistory.transform.GetChild(9).GetComponent<Text>().text = r["data"].SelectToken("likes").ToString();
+        }
+        else
+        {
+            FriendHistory_LocHistory.transform.GetChild(9).GetComponent<Text>().text = r["data"].SelectToken("likes").ToString();
+        }
     }
     public void OnMyEditPanelClick()
     {
@@ -220,7 +285,10 @@ public class HistoryManager : MonoBehaviour
     }
     public void OnMyHistoyLocHistoryClick(GameObject g, JToken j)
     {
+        print(j["historyIdx"].ToString());
+        curId = int.Parse(j["historyIdx"].ToString());
         StartCoroutine(getComment(int.Parse(g.name)));
+        print(j["alreadyLiked"].ToString());
         if (LM.IsMyAlbum)
         {
             MyHistoryMain.SetActive(false);
@@ -245,6 +313,10 @@ public class HistoryManager : MonoBehaviour
             MyHistory_LocHistory.transform.GetChild(6).GetComponent<Text>().text = j["datetime"].ToString();
             MyHistory_LocHistory.transform.GetChild(7).GetComponent<Text>().text = j["day"].ToString();
             MyHistory_LocHistory.transform.GetChild(5).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>().text = j["text"].ToString();
+            if (j["alreadyLiked"].ToString().Equals("True"))
+                MyHistory_LocHistory.transform.GetChild(8).GetComponent<RawImage>().color = new Color(1, 1, 1, 1);
+            else
+                MyHistory_LocHistory.transform.GetChild(8).GetComponent<RawImage>().color = new Color(1, 1, 1, 75/255f);
         }
         else
         {
@@ -270,6 +342,10 @@ public class HistoryManager : MonoBehaviour
             FriendHistory_LocHistory.transform.GetChild(6).GetComponent<Text>().text = j["datetime"].ToString();
             FriendHistory_LocHistory.transform.GetChild(7).GetComponent<Text>().text = j["day"].ToString();
             FriendHistory_LocHistory.transform.GetChild(5).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>().text = j["text"].ToString();
+            if (j["alreadyLiked"].ToString().Equals("True"))
+                FriendHistory_LocHistory.transform.GetChild(8).GetComponent<RawImage>().color = new Color(1, 1, 1, 1);
+            else
+                FriendHistory_LocHistory.transform.GetChild(8).GetComponent<RawImage>().color = new Color(1, 1, 1, 75 / 255f);
         }
     }
     IEnumerator getComment(int idx)
@@ -283,8 +359,7 @@ public class HistoryManager : MonoBehaviour
         //print(r);
         var a = r["data"];
         print(a);
-        print(a.First.SelectToken("profileImage").ToString());
-        if (a.HasValues)
+        if (a.ToString()!=null)
         {
             if (LM.IsMyAlbum)
             {
@@ -319,6 +394,21 @@ public class HistoryManager : MonoBehaviour
                 g.transform.GetChild(4).GetComponent<Text>().text = i.SelectToken("comment").ToString();
             }
         }
+        else
+        {
+            if (LM.IsMyAlbum)
+            {
+                MyHistoryCommentPanel.transform.GetChild(0).gameObject.GetComponent<RawImage>().texture = null;
+                MyHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = "";
+                MyHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = "첫 댓글을 입력해주세요!";
+            }
+            else
+            {
+                FriendHistoryCommentPanel.transform.GetChild(0).gameObject.GetComponent<RawImage>().texture = null;
+                FriendHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = "";
+                FriendHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = "첫 댓글을 입력해주세요!";
+            }
+        }
         
     }
     IEnumerator AllHistory(int[] id)
@@ -330,9 +420,18 @@ public class HistoryManager : MonoBehaviour
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
         print(r);
-        FriendName_Text2.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
-        url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
-        StartCoroutine(DownloadImage(url, Friend_Image2));
+        if (LM.IsMyAlbum)
+        {
+            MyName_Text2.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+            url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
+            StartCoroutine(DownloadImage(url, My_Image2));
+        }
+        else
+        {
+            FriendName_Text2.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+            url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
+            StartCoroutine(DownloadImage(url, Friend_Image2));
+        }
 
         var a = r["data"].SelectToken("history");
         List<GameObject> list = new List<GameObject>();
@@ -379,10 +478,19 @@ public class HistoryManager : MonoBehaviour
         var r = JObject.Parse(result);
         //print(result);
         print(r["data"]);
-        FriendName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+        if (LM.IsMyAlbum)
+        {
+            MyName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+            url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
+            StartCoroutine(DownloadImage(url, My_Image));
+        }
+        else
+        {
+            MyName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+            url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
+            StartCoroutine(DownloadImage(url, My_Image));
+        }
         
-        url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
-        StartCoroutine(DownloadImage(url, Friend_Image));
 
         var a = r["data"].SelectToken("history");
         //List<GameObject> list = new List<GameObject>();
@@ -463,13 +571,20 @@ public class HistoryManager : MonoBehaviour
     }
     public void OnMyHistoyLocBackClick()
     {
+        Clear(MyPrevContent);
+        Clear(MyAllContent);
+        
         if (LM.IsMyAlbum)
         {
+            StartCoroutine("PreviewHistory", new int[] { 1, 1 });
+            StartCoroutine("AllHistory", new int[] { 1, 1 });
             MyHistory_LocMain.SetActive(true);
             MyHistory_LocHistory.SetActive(false);
         }
         else
         {
+            StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+            StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
             FriendHistory_LocMain.SetActive(true);
             FriendHistory_LocHistory.SetActive(false);
         }
