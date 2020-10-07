@@ -107,30 +107,28 @@ public class HistoryManager : MonoBehaviour
     public void OnMyHistoryCommentClick()
     {
         MyHistory_LocHistory.SetActive(false);
-        MyHistory_Comment.SetActive(true);
+        //MyHistory_Comment.SetActive(true);
         Vector2 v = new Vector2(0, 0);
         StartCoroutine(LerpPosGeneral(v, MyHistory_Comment));
     }
     public void OnMyHistoryCommentBackClick()
     {
         MyHistory_LocHistory.SetActive(true);
-        Clear(MyHistoryCommentContent);
-        MyHistory_Comment.GetComponent<RectTransform>().localPosition = new Vector2(0, -255);
-        MyHistory_Comment.SetActive(false);
+        MyHistory_Comment.GetComponent<RectTransform>().localPosition = new Vector2(0, -384);
+        //MyHistory_Comment.SetActive(false);
     }
     public void OnFriendHistoryCommentClick()
     {
         FriendHistory_LocHistory.SetActive(false);
-        FriendHistory_Comment.SetActive(true);
+        //FriendHistory_Comment.SetActive(true);
         Vector2 v = new Vector2(0, 0);
         StartCoroutine(LerpPosGeneral(v, FriendHistory_Comment));
     }
     public void OnFriendHistoryCommentBackClick()
     {
         FriendHistory_LocHistory.SetActive(true);
-        Clear(FriendHistoryCommentContent);
-        FriendHistory_Comment.GetComponent<RectTransform>().localPosition = new Vector2(0, -255);
-        FriendHistory_Comment.SetActive(false);
+        FriendHistory_Comment.GetComponent<RectTransform>().localPosition = new Vector2(0, -384);
+        //FriendHistory_Comment.SetActive(false);
     }
     public void OnFollowClick()
     {
@@ -303,9 +301,7 @@ public class HistoryManager : MonoBehaviour
             foreach(var i in a)
             {
                 GameObject g = Instantiate(Resources.Load("Comment_Panel")) as GameObject;
-                //g.GetComponent<RectTransform>().localPosition = new Vector3(120, -50, 0);
-                g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
-                g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
+                
                 if (LM.IsMyAlbum)
                 {
                     g.transform.parent = MyHistoryCommentContent.transform;
@@ -316,6 +312,9 @@ public class HistoryManager : MonoBehaviour
                     g.transform.parent = FriendHistoryCommentContent.transform;
                     StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), g.transform.GetChild(0).gameObject));
                 }
+                g.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
+                g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+                g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
                 g.transform.GetChild(3).GetComponent<Text>().text = i.SelectToken("name").ToString();
                 g.transform.GetChild(4).GetComponent<Text>().text = i.SelectToken("comment").ToString();
             }

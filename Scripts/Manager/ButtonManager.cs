@@ -20,6 +20,10 @@ public class ButtonManager : MonoBehaviour
     GameObject content3;
     [SerializeField]
     GameObject content4;
+    [SerializeField]
+    GameObject content5;
+    [SerializeField]
+    GameObject content6;
 
     LoginManager LM;
     HistoryManager HM;
@@ -55,6 +59,7 @@ public class ButtonManager : MonoBehaviour
         content2.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
         Clear(content1);
         Clear(content2);
+        Clear(content5);
     }
     public void OnfriendHistoryClick()
     {
@@ -80,6 +85,7 @@ public class ButtonManager : MonoBehaviour
         content4.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
         Clear(content3);
         Clear(content4);
+        Clear(content6);
     }
     public void OnfriendHistoryLocClick()
     {
