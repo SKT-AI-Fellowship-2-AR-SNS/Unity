@@ -205,6 +205,7 @@ public class HistoryManager : MonoBehaviour
         if (MyProfile.activeSelf == true) MyProfile.SetActive(false);
         MyHistoryMain.SetActive(false);
         MyHistory_Follow.SetActive(true);
+        StartCoroutine(onFollowing(0));
     }
     public void OnFollowBackClick()
     {
@@ -253,9 +254,25 @@ public class HistoryManager : MonoBehaviour
                 g.GetComponent<RectTransform>().localPosition = new Vector3(g.transform.position.x, g.transform.position.y, 0);
                 g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
                 g.GetComponent<RectTransform>().localScale = new Vector3(1,1,1);
+
+                g.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
+                g.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
             }
         }
-        
+    }
+    public void OnFollow(int uid)
+    {
+        StartCoroutine(Follow(uid));
+    }
+    IEnumerator Follow(int uid)
+    {
+        string url = "http://3.34.20.225:3000/users/"+uid;
+        byte[] data = null;
+        UnityWebRequest request = UnityWebRequest.Put(url, data);
+        yield return request.SendWebRequest();
+        string result = request.downloadHandler.text;
+        var r = JObject.Parse(result);
+        print(r);
     }
     public void OnFollowerTabClick()
     {
