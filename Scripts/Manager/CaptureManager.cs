@@ -48,6 +48,8 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     GameObject Private_Icon;
     [SerializeField]
     GameObject Tag_Icon;
+    [SerializeField]
+    GameObject TagPanel;
 
     PhotoCapture photoCaptureObject = null;
     VideoCapture m_VideoCapture = null;
@@ -84,7 +86,11 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     }
     public void OnTagClick()
     {
-
+        TagPanel.SetActive(true);
+    }
+    public void OnAfterTagClick()
+    {
+        TagPanel.SetActive(false);
     }
     public void OnCameraClick()
     {

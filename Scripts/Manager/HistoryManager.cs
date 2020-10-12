@@ -11,6 +11,10 @@ using UnityEditor.UIElements;
 public class HistoryManager : MonoBehaviour
 {
     [SerializeField]
+    GameObject MyHistory_Panel;
+    [SerializeField]
+    GameObject MyProfile;
+    [SerializeField]
     GameObject myLoc_Icon;
     [SerializeField]
     GameObject myTime_Icon;
@@ -197,6 +201,8 @@ public class HistoryManager : MonoBehaviour
     }
     public void OnFollowClick()
     {
+        if (MyHistory_Panel.activeSelf == false) MyHistory_Panel.SetActive(true);
+        if (MyProfile.activeSelf == true) MyProfile.SetActive(false);
         MyHistoryMain.SetActive(false);
         MyHistory_Follow.SetActive(true);
     }
