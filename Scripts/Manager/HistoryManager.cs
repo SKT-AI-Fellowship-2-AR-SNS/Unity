@@ -202,35 +202,35 @@ public class HistoryManager : MonoBehaviour
     public void OnFollowClick()
     {
         if (MyHistory_Panel.activeSelf == false) MyHistory_Panel.SetActive(true);
-        if (MyProfile.activeSelf == true) MyProfile.SetActive(false);
         MyHistoryMain.SetActive(false);
         MyHistory_Follow.SetActive(true);
         StartCoroutine(onFollowing(0));
     }
     public void OnFollowBackClick()
     {
+        if (MyProfile.activeSelf == true)
+        {
+            MyHistory_Follow.SetActive(false);
+            MyHistoryMain.SetActive(true);
+            MyHistory_Panel.SetActive(false);
+            return;
+        }
         MyHistory_Follow.SetActive(false);
         MyHistoryMain.SetActive(true);
-    }
-    public void OnFollowingTabClick()
-    {
-        Clear(FollowContent);
-        StartCoroutine(onFollowing(0));
-        MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
-        MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color = new Color(151 / 255f, 151 / 255f, 151 / 255f);
-        MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
-        MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
     }
     IEnumerator onFollowing(int state)
     {
         string url = "";
-        if (state == 0) {
+        if (state == 0)
+        {
             url = "http://3.34.20.225:3000/users/getFollowing/1" /*+ LM.UID*/;
         }
-        else if (state == 1) {
+        else if (state == 1)
+        {
             url = "http://3.34.20.225:3000/users/getFollower/1" /*+ LM.UID*/;
         }
-        else {
+        else
+        {
             url = "http://3.34.20.225:3000/users/getRecommend/1" /*+ LM.UID*/;
         }
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
@@ -240,10 +240,10 @@ public class HistoryManager : MonoBehaviour
         var r = JObject.Parse(result);
         if (r["status"].ToString().Equals("200"))
         {
-            //print(r["data"]);
-            foreach(var item in r["data"])
+            print(r["data"]);
+            foreach (var item in r["data"])
             {
-                print(item);
+                //print(item);
                 GameObject g = Instantiate(Resources.Load("follow")) as GameObject;
                 g.name = item.SelectToken("id").ToString();
                 StartCoroutine(DownloadImage(item.SelectToken("profileImage").ToString(), g.transform.GetChild(0).gameObject));
@@ -253,7 +253,7 @@ public class HistoryManager : MonoBehaviour
                 g.transform.parent = FollowContent.transform;
                 g.GetComponent<RectTransform>().localPosition = new Vector3(g.transform.position.x, g.transform.position.y, 0);
                 g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
-                g.GetComponent<RectTransform>().localScale = new Vector3(1,1,1);
+                g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
 
                 g.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
                 g.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
@@ -266,19 +266,39 @@ public class HistoryManager : MonoBehaviour
     }
     IEnumerator Follow(int uid)
     {
-        string url = "http://3.34.20.225:3000/users/"+uid;
+        string url = "http://3.34.20.225:3000/users/" + LM.UID + "/" + uid;
         byte[] data = null;
         UnityWebRequest request = UnityWebRequest.Put(url, data);
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
         print(r);
+        if (r["status"].ToString().Equals("200"))
+        {
+            Clear(FollowContent);
+            if (MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color.r==151/255f)
+                StartCoroutine(onFollowing(0));
+            if (MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color.g == 151 / 255f)
+                StartCoroutine(onFollowing(1));
+            if (MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color.b == 151 / 255f)
+                StartCoroutine(onFollowing(2));
+        }
     }
+    public void OnFollowingTabClick()
+    {
+        Clear(FollowContent);
+        StartCoroutine(onFollowing(0));
+        //MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
+        MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color = new Color(151 / 255f, 151 / 255f, 151 / 255f);
+        MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
+        MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
+    }
+    
     public void OnFollowerTabClick()
     {
         Clear(FollowContent);
         StartCoroutine(onFollowing(1));
-        MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
+        //MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
         MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
         MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color = new Color(151 / 255f, 151 / 255f, 151 / 255f);
         MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
@@ -287,7 +307,7 @@ public class HistoryManager : MonoBehaviour
     {
         Clear(FollowContent);
         StartCoroutine(onFollowing(2));
-        MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
+        //MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
         MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
         MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
         MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color = new Color(151 / 255f, 151 / 255f, 151 / 255f);

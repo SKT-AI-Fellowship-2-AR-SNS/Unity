@@ -10,8 +10,7 @@ public class SlideManager : MonoBehaviour
     GameObject Panel;
     [SerializeField]
     GameObject MyProfile;
-    [SerializeField]
-    GameObject MyHistory_Panel;
+    
     public void OnMyProfileClick()
     {
         MyProfile.SetActive(true);
