@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using OpenCVForUnity.VideoModule;
-using UnityEditor.UIElements;
+//using UnityEditor.UIElements;
 
 public class HistoryManager : MonoBehaviour
 {
@@ -106,7 +106,8 @@ public class HistoryManager : MonoBehaviour
     bool IsSelected2 = false;
     int state;
 
-    int pageNum = 0;
+    public int pageNum = 1;
+    public int TotalPageNum;
 
     public int curId = 0;
 
@@ -218,20 +219,48 @@ public class HistoryManager : MonoBehaviour
         MyHistory_Follow.SetActive(false);
         MyHistoryMain.SetActive(true);
     }
+    public void OnFollowLeftClick()
+    {
+        if (pageNum > 1)
+        {
+            pageNum -= 1;
+            Clear(FollowContent);
+            if (MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color.r == 151 / 255f)
+                StartCoroutine(onFollowing(0));
+            if (MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color.g == 151 / 255f)
+                StartCoroutine(onFollowing(1));
+            if (MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color.b == 151 / 255f)
+                StartCoroutine(onFollowing(2));
+        }
+    }
+    public void OnFollowRightClick()
+    {
+        if (TotalPageNum > pageNum)
+        {
+            pageNum += 1;
+            Clear(FollowContent);
+            if (MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color.r == 151 / 255f)
+                StartCoroutine(onFollowing(0));
+            if (MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color.g == 151 / 255f)
+                StartCoroutine(onFollowing(1));
+            if (MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color.b == 151 / 255f)
+                StartCoroutine(onFollowing(2));
+        }   
+    }
     IEnumerator onFollowing(int state)
     {
         string url = "";
         if (state == 0)
         {
-            url = "http://3.34.20.225:3000/users/getFollowing/1" /*+ LM.UID*/;
+            url = "http://3.34.20.225:3000/users/getFollowing/1?page="+ pageNum /*+ LM.UID*/;
         }
         else if (state == 1)
         {
-            url = "http://3.34.20.225:3000/users/getFollower/1" /*+ LM.UID*/;
+            url = "http://3.34.20.225:3000/users/getFollower/1?page="+ pageNum /*+ LM.UID*/;
         }
         else
         {
-            url = "http://3.34.20.225:3000/users/getRecommend/1" /*+ LM.UID*/;
+            url = "http://3.34.20.225:3000/users/getRecommend/1?page="+ pageNum /*+ LM.UID*/;
         }
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         UnityWebRequest request = UnityWebRequest.Get(url);
@@ -241,7 +270,8 @@ public class HistoryManager : MonoBehaviour
         if (r["status"].ToString().Equals("200"))
         {
             print(r["data"]);
-            foreach (var item in r["data"])
+            TotalPageNum = (int.Parse(r["data"].SelectToken("count").ToString()) / 7) +1;
+            foreach (var item in r["data"].SelectToken("list"))
             {
                 //print(item);
                 GameObject g = Instantiate(Resources.Load("follow")) as GameObject;
@@ -286,6 +316,7 @@ public class HistoryManager : MonoBehaviour
     }
     public void OnFollowingTabClick()
     {
+        pageNum = 1;
         Clear(FollowContent);
         StartCoroutine(onFollowing(0));
         //MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
@@ -296,6 +327,7 @@ public class HistoryManager : MonoBehaviour
     
     public void OnFollowerTabClick()
     {
+        pageNum = 1;
         Clear(FollowContent);
         StartCoroutine(onFollowing(1));
         //MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
@@ -305,6 +337,7 @@ public class HistoryManager : MonoBehaviour
     }
     public void OnRecommendTabClick()
     {
+        pageNum = 1;
         Clear(FollowContent);
         StartCoroutine(onFollowing(2));
         //MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
