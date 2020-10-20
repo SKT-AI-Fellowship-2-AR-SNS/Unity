@@ -97,6 +97,11 @@ public class HistoryManager : MonoBehaviour
     [SerializeField]
     GameObject FreindAllContent;
 
+    [SerializeField]
+    GameObject MyTagContent;
+    [SerializeField]
+    GameObject FriendTagContent;
+    
     LoginManager LM;
     CaptureManager CM;
 
@@ -364,6 +369,7 @@ public class HistoryManager : MonoBehaviour
         print(j["historyIdx"].ToString());
         curId = int.Parse(j["historyIdx"].ToString());
         StartCoroutine(getComment(int.Parse(g.name)));
+        StartCoroutine(GetHistory(1, int.Parse(j["historyIdx"].ToString())));
         print(j["alreadyLiked"].ToString());
         if (LM.IsMyAlbum)
         {
@@ -424,6 +430,41 @@ public class HistoryManager : MonoBehaviour
                 FriendHistory_LocHistory.transform.GetChild(8).GetComponent<RawImage>().color = new Color(1, 1, 1, 75 / 255f);
         }
     }
+    IEnumerator GetHistory(int uid, int hitoryIdx)
+    {
+        string url = "http://3.34.20.225:3000/history/1/" + hitoryIdx;
+        List<IMultipartFormSection> form = new List<IMultipartFormSection>();
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        yield return request.SendWebRequest();
+        string result = request.downloadHandler.text;
+        var r = JObject.Parse(result);
+        var a = r["data"].SelectToken("tag");
+        if (a.ToString() != null)
+        {
+            int t = 0;
+            foreach (var i in a)
+            {
+                //GameObject g = Instantiate(Resources.Load("RawImage")) as GameObject;
+
+                if (LM.IsMyAlbum)
+                {
+                    //g.transform.parent = MyHistoryCommentContent.transform;
+                    StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), MyTagContent.transform.GetChild(t).gameObject));
+                }
+                else
+                {
+                    //g.transform.parent = FriendHistoryCommentContent.transform;
+                    StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), FriendTagContent.transform.GetChild(t).gameObject));
+                }
+                //g.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
+                //g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+                //g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
+                //g.transform.GetChild(3).GetComponent<Text>().text = i.SelectToken("name").ToString();
+                //g.transform.GetChild(4).GetComponent<Text>().text = i.SelectToken("comment").ToString();
+                t++;            
+            }
+        }
+    }
     IEnumerator getComment(int idx)
     {
         string url = "http://3.34.20.225:3000/history/getComment/" + idx;
@@ -435,7 +476,8 @@ public class HistoryManager : MonoBehaviour
         //print(r);
         var a = r["data"];
         print(a);
-        if (a.ToString()!=null)
+        print(a.First.SelectToken("comment").ToString());
+        if (a.First.SelectToken("comment").ToString()!=null)
         {
             if (LM.IsMyAlbum)
             {
