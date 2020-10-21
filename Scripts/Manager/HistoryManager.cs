@@ -439,29 +439,39 @@ public class HistoryManager : MonoBehaviour
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
         var a = r["data"].SelectToken("tag");
+        int t = -1;
         if (a.ToString() != null)
         {
-            int t = 0;
+            t = 0;
             foreach (var i in a)
             {
                 //GameObject g = Instantiate(Resources.Load("RawImage")) as GameObject;
 
                 if (LM.IsMyAlbum)
                 {
-                    //g.transform.parent = MyHistoryCommentContent.transform;
+                    MyTagContent.transform.GetChild(t).GetComponent<RawImage>().color = new Color(1,1,1);
                     StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), MyTagContent.transform.GetChild(t).gameObject));
                 }
                 else
                 {
-                    //g.transform.parent = FriendHistoryCommentContent.transform;
+                    FriendTagContent.transform.GetChild(t).GetComponent<RawImage>().color = new Color(1, 1, 1);
                     StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), FriendTagContent.transform.GetChild(t).gameObject));
                 }
-                //g.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
-                //g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
-                //g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
-                //g.transform.GetChild(3).GetComponent<Text>().text = i.SelectToken("name").ToString();
-                //g.transform.GetChild(4).GetComponent<Text>().text = i.SelectToken("comment").ToString();
                 t++;            
+            } 
+        }
+        if (t != 4)
+        {
+            for (int i = t + 1; i < 5; i++)
+            {
+                if (LM.IsMyAlbum)
+                {
+                    MyTagContent.transform.GetChild(t).gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
+                }
+                else
+                {
+                    FriendTagContent.transform.GetChild(t).gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
+                }
             }
         }
     }
@@ -475,9 +485,8 @@ public class HistoryManager : MonoBehaviour
         var r = JObject.Parse(result);
         //print(r);
         var a = r["data"];
-        print(a);
-        print(a.First.SelectToken("comment").ToString());
-        if (a.First.SelectToken("comment").ToString()!=null)
+        print(a.HasValues);
+        if (a.HasValues!=false)
         {
             if (LM.IsMyAlbum)
             {
@@ -694,6 +703,7 @@ public class HistoryManager : MonoBehaviour
         
         if (LM.IsMyAlbum)
         {
+            ClearTag(MyTagContent);
             StartCoroutine("PreviewHistory", new int[] { 1, 1 });
             StartCoroutine("AllHistory", new int[] { 1, 1 });
             MyHistory_LocMain.SetActive(true);
@@ -701,10 +711,23 @@ public class HistoryManager : MonoBehaviour
         }
         else
         {
+            ClearTag(FriendTagContent);
             StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
             StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
             FriendHistory_LocMain.SetActive(true);
             FriendHistory_LocHistory.SetActive(false);
+        }
+    }
+    void ClearTag(GameObject content)
+    {
+        Transform[] childList = content.GetComponentsInChildren<Transform>(true);
+        if (childList != null)
+        {
+            for (int i = 1; i < childList.Length; i++)
+            {
+                if (childList[i] != transform)
+                    childList[i].gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
+            }
         }
     }
     public void OnmyLocClick()
