@@ -101,7 +101,36 @@ public class HistoryManager : MonoBehaviour
     GameObject MyTagContent;
     [SerializeField]
     GameObject FriendTagContent;
-    
+
+    [SerializeField]
+    Text MyStatusText;
+    [SerializeField]
+    Text FriendStatusText;
+
+    [SerializeField]
+    GameObject MyHistoryEditComment;
+    [SerializeField]
+    GameObject FriendHistoryEditComment;
+
+    [SerializeField]
+    GameObject MyCommentInput;
+    [SerializeField]
+    GameObject FriendCommentInput;
+
+    [SerializeField]
+    Text MyFollowingCount;
+    [SerializeField]
+    Text MyFollowerCount;
+    [SerializeField]
+    Text FriendFollowingCount;
+    [SerializeField]
+    Text FriendFollowerCount;
+
+    [SerializeField]
+    GameObject MyCommentContent;
+    [SerializeField]
+    GameObject FriendCommentContent;
+
     LoginManager LM;
     CaptureManager CM;
 
@@ -113,6 +142,9 @@ public class HistoryManager : MonoBehaviour
 
     public int pageNum = 1;
     public int TotalPageNum;
+
+    public string MyFollwingNum;
+    public string MyFollwerNum;
 
     public int curId = 0;
 
@@ -153,7 +185,7 @@ public class HistoryManager : MonoBehaviour
     }
     IEnumerator HeartClick()
     {
-        string url = "http://3.34.20.225:3000/history/like/1/" + curId;
+        string url = "http://54.180.5.47:3000/history/like/1/" + curId;
         byte[] data = null;
         UnityWebRequest request = UnityWebRequest.Put(url, data);
         yield return request.SendWebRequest();
@@ -181,27 +213,27 @@ public class HistoryManager : MonoBehaviour
     }
     public void OnMyHistoryCommentClick()
     {
-        MyHistory_LocHistory.SetActive(false);
+        //MyHistory_LocHistory.SetActive(false);
         //MyHistory_Comment.SetActive(true);
         Vector2 v = new Vector2(0, 0);
         StartCoroutine(LerpPosGeneral(v, MyHistory_Comment));
     }
     public void OnMyHistoryCommentBackClick()
     {
-        MyHistory_LocHistory.SetActive(true);
+        //MyHistory_LocHistory.SetActive(true);
         MyHistory_Comment.GetComponent<RectTransform>().localPosition = new Vector2(0, -384);
         //MyHistory_Comment.SetActive(false);
     }
     public void OnFriendHistoryCommentClick()
     {
-        FriendHistory_LocHistory.SetActive(false);
+        //FriendHistory_LocHistory.SetActive(false);
         //FriendHistory_Comment.SetActive(true);
         Vector2 v = new Vector2(0, 0);
         StartCoroutine(LerpPosGeneral(v, FriendHistory_Comment));
     }
     public void OnFriendHistoryCommentBackClick()
     {
-        FriendHistory_LocHistory.SetActive(true);
+        //FriendHistory_LocHistory.SetActive(true);
         FriendHistory_Comment.GetComponent<RectTransform>().localPosition = new Vector2(0, -384);
         //FriendHistory_Comment.SetActive(false);
     }
@@ -257,15 +289,15 @@ public class HistoryManager : MonoBehaviour
         string url = "";
         if (state == 0)
         {
-            url = "http://3.34.20.225:3000/users/getFollowing/1?page="+ pageNum /*+ LM.UID*/;
+            url = "http://54.180.5.47:3000/users/getFollowing/1?page=" + pageNum /*+ LM.UID*/;
         }
         else if (state == 1)
         {
-            url = "http://3.34.20.225:3000/users/getFollower/1?page="+ pageNum /*+ LM.UID*/;
+            url = "http://54.180.5.47:3000/users/getFollower/1?page=" + pageNum /*+ LM.UID*/;
         }
         else
         {
-            url = "http://3.34.20.225:3000/users/getRecommend/1?page="+ pageNum /*+ LM.UID*/;
+            url = "http://54.180.5.47:3000/users/getRecommend/1?page=" + pageNum /*+ LM.UID*/;
         }
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         UnityWebRequest request = UnityWebRequest.Get(url);
@@ -301,7 +333,7 @@ public class HistoryManager : MonoBehaviour
     }
     IEnumerator Follow(int uid)
     {
-        string url = "http://3.34.20.225:3000/users/" + LM.UID + "/" + uid;
+        string url = "http://54.180.5.47:3000/users/" + LM.UID + "/" + uid;
         byte[] data = null;
         UnityWebRequest request = UnityWebRequest.Put(url, data);
         yield return request.SendWebRequest();
@@ -432,7 +464,7 @@ public class HistoryManager : MonoBehaviour
     }
     IEnumerator GetHistory(int uid, int hitoryIdx)
     {
-        string url = "http://3.34.20.225:3000/history/1/" + hitoryIdx;
+        string url = "http://54.180.5.47:3000/history/1/" + hitoryIdx;
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
@@ -477,7 +509,7 @@ public class HistoryManager : MonoBehaviour
     }
     IEnumerator getComment(int idx)
     {
-        string url = "http://3.34.20.225:3000/history/getComment/" + idx;
+        string url = "http://54.180.5.47:3000/history/getComment/" + idx;
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
@@ -538,9 +570,81 @@ public class HistoryManager : MonoBehaviour
         }
         
     }
+    public void OnCommentEditClick()
+    {
+        if (LM.IsMyAlbum)
+        {
+            //MyHistory_Comment.SetActive(false);
+            MyHistoryEditComment.SetActive(true);
+        }
+        else
+        {
+            //FriendHistory_Comment.SetActive(false);
+            FriendHistoryEditComment.SetActive(true);
+        }
+        
+    }
+    public void OnCommentEditBackClick()
+    {
+        if (LM.IsMyAlbum)
+        {
+            //MyHistory_Comment.SetActive(true);
+            MyHistoryEditComment.SetActive(false);
+        }
+        else
+        {
+            //FriendHistory_Comment.SetActive(true);
+            FriendHistoryEditComment.SetActive(false);
+        }
+    }
+    public void OnCommentEditButtonClick()
+    {
+        int historyIdx = curId;
+        string comment = "";
+        if (LM.IsMyAlbum)
+        {
+            comment = MyCommentInput.transform.GetChild(1).GetComponent<Text>().text;
+        }
+        else
+        {
+            comment = FriendCommentInput.transform.GetChild(1).GetComponent<Text>().text;
+        }
+            
+        StartCoroutine(EditComment(historyIdx, comment));
+    }
+    IEnumerator EditComment(int historyIdx,string comment)
+    {
+        string url = "http://54.180.5.47:3000/history/addComment";
+        List<IMultipartFormSection> form = new List<IMultipartFormSection>();
+        string jsonStr = "{\n " +
+            "\"userIdx\": \""+"1"+"\",\n " +
+            "\"historyIdx\": \""+ historyIdx.ToString()+"\"\n" +
+            "\"comment\": \""+ comment+"\",\n " +
+            "}";
+        var formData = System.Text.Encoding.UTF8.GetBytes(jsonStr);
+        /*form.Add(new MultipartFormDataSection("userIdx", "1"));
+        form.Add(new MultipartFormDataSection("historyIdx", historyIdx.ToString()));
+        form.Add(new MultipartFormDataSection("comment", comment));*/
+
+        UnityWebRequest request = UnityWebRequest.Post(url, form);
+        yield return request.SendWebRequest();
+        string result = request.downloadHandler.text;
+        var r = JObject.Parse(result);
+        print(r);
+        if (LM.IsMyAlbum)
+        {
+            Clear(MyCommentContent);
+            StartCoroutine(getComment(curId));
+        }
+        else
+        {
+            Clear(FriendCommentContent);
+            StartCoroutine(getComment(curId));
+        }
+    }
     IEnumerator AllHistory(int[] id)
     {
-        string url = "http://3.34.20.225:3000/history/getHistory/" + id[0]+"/" + id[1]+"/1/1";
+        string url = "http://54.180.5.47:3000/history/getHistory/" + id[0]+"/" + id[1]+"/1/1";
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
@@ -597,7 +701,7 @@ public class HistoryManager : MonoBehaviour
 
     IEnumerator PreviewHistory(int[] id)
     {
-        string url = "http://3.34.20.225:3000/history/getHistory/" + id[0] + "/" + id[1] + "/1/1";
+        string url = "http://54.180.5.47:3000/history/getHistory/" + id[0] + "/" + id[1] + "/1/1";
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
@@ -607,15 +711,24 @@ public class HistoryManager : MonoBehaviour
         print(r["data"]);
         if (LM.IsMyAlbum)
         {
+            MyFollwingNum = r["data"].SelectToken("profile").First.SelectToken("followingCount").ToString();
+            MyFollwerNum = r["data"].SelectToken("profile").First.SelectToken("followerCount").ToString();
+
             MyName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+            MyStatusText.text = r["data"].SelectToken("profile").First.SelectToken("message").ToString();
+            MyFollowingCount.text = MyFollwingNum;
+            MyFollowerCount.text = MyFollwerNum;
             url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
             StartCoroutine(DownloadImage(url, My_Image));
         }
         else
         {
-            MyName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+            FriendName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+            FriendStatusText.text = r["data"].SelectToken("profile").First.SelectToken("message").ToString();
+            FriendFollowingCount.text = r["data"].SelectToken("profile").First.SelectToken("followingCount").ToString();
+            FriendFollowerCount.text = r["data"].SelectToken("profile").First.SelectToken("followerCount").ToString();
             url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
-            StartCoroutine(DownloadImage(url, My_Image));
+            StartCoroutine(DownloadImage(url, Friend_Image));
         }
         
 
@@ -704,6 +817,7 @@ public class HistoryManager : MonoBehaviour
         if (LM.IsMyAlbum)
         {
             ClearTag(MyTagContent);
+            Clear(MyCommentContent);
             StartCoroutine("PreviewHistory", new int[] { 1, 1 });
             StartCoroutine("AllHistory", new int[] { 1, 1 });
             MyHistory_LocMain.SetActive(true);
@@ -712,6 +826,7 @@ public class HistoryManager : MonoBehaviour
         else
         {
             ClearTag(FriendTagContent);
+            Clear(FriendCommentContent);
             StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
             StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
             FriendHistory_LocMain.SetActive(true);

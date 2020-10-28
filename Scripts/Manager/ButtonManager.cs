@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 public class ButtonManager : MonoBehaviour
 {
     [SerializeField]
@@ -24,6 +23,10 @@ public class ButtonManager : MonoBehaviour
     GameObject content5;
     [SerializeField]
     GameObject content6;
+    [SerializeField]
+    GameObject MyCommentContent;
+    [SerializeField]
+    GameObject FriendCommentContent;
 
     LoginManager LM;
     HistoryManager HM;
@@ -60,6 +63,7 @@ public class ButtonManager : MonoBehaviour
         Clear(content1);
         Clear(content2);
         Clear(content5);
+        Clear(MyCommentContent);
     }
     public void OnfriendHistoryClick()
     {
@@ -86,6 +90,7 @@ public class ButtonManager : MonoBehaviour
         Clear(content3);
         Clear(content4);
         Clear(content6);
+        Clear(FriendCommentContent);
     }
     public void OnfriendHistoryLocClick()
     {

@@ -30,7 +30,7 @@ public class LocationManager : MonoBehaviour
     IEnumerator Scan()
     {
 #if UNITY_EDITOR
-        string url = "http://3.34.20.225:3000/main/getLocation";
+        string url = "http://54.180.5.47:3000/main/getLocation";
 
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         //byte[] data = Encoding.UTF8.GetBytes("{\n   \"bssid1\" : \"00:08:9f:01:cc:9c\",\n   \"bssid2\" : \"10:e3:c7:05:a9:c7\"\n}");
@@ -51,7 +51,7 @@ public class LocationManager : MonoBehaviour
         if (WiFiAdapter != null)
         {
             var report = WiFiAdapter.GetNetworkReport();
-            string url = "http://3.34.20.225:3000/main/getLocation";
+            string url = "http://54.180.5.47:3000/main/getLocation";
 
             List<IMultipartFormSection> form = new List<IMultipartFormSection>();
             byte[] data = Encoding.UTF8.GetBytes("{\n   \"bssid1\" : \"" + report[0] + "\",\n   \"bssid2\" : \"" + report[1] + "\"\n}");

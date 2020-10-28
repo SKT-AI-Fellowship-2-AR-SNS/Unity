@@ -65,20 +65,22 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
 
     public string UID;
 
-    bool IsMyCapture = false;
+    public bool IsMyCapture = false;
     public bool camera;
-    public bool IsPrivate = false;
+    public int IsPrivate = 0;
+
+    public string TagList;
     public void OnPrivateClick()
     {
         if (Private_Icon.GetComponent<RawImage>().color.b == 1)
         {
-            IsPrivate = true;
+            IsPrivate = 1;
             Private_Icon.GetComponent<RawImage>().color = new Color(1, 1, 0);
             Tag_Icon.SetActive(false);
         }
         else
         {
-            IsPrivate = false;
+            IsPrivate = 0;
             Private_Icon.GetComponent<RawImage>().color = new Color(1, 1, 1);
             Tag_Icon.SetActive(true);
         }
@@ -86,7 +88,31 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     }
     public void OnTagClick()
     {
+        StartCoroutine(TagLoad());
+        TagList = "";
         TagPanel.SetActive(true);
+    }
+    public void OnTagBackClick()
+    {
+        TagPanel.SetActive(false);
+    }
+    IEnumerator TagLoad()
+    {
+        string url = "";
+        List<IMultipartFormSection> form = new List<IMultipartFormSection>();
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        yield return request.SendWebRequest();
+        string result = request.downloadHandler.text;
+        var r = JObject.Parse(result);
+
+        GameObject g = Instantiate(Resources.Load("follow")) as GameObject;
+
+        g.GetComponent<RectTransform>().localPosition = new Vector3(g.transform.position.x, g.transform.position.y, 0);
+        g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
+        g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+
+        //g.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
+        //g.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
     }
     public void OnAfterTagClick()
     {
@@ -177,7 +203,7 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     }
     IEnumerator Upload()
     {
-        string url = "http://3.34.20.225:3000/history/addHistory";
+        string url = "http://54.180.5.47:3000/history/addHistory";
         var formData = File.ReadAllBytes(filePath);
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         if(camera)
@@ -187,6 +213,9 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
         form.Add(new MultipartFormDataSection("id", "1"));
         form.Add(new MultipartFormDataSection("text", InputField.GetComponent<InputField>().text));
         form.Add(new MultipartFormDataSection("location", Location_Text.GetComponent<Text>().text));
+        form.Add(new MultipartFormDataSection("scope", "0"/*IsPrivate.ToString()*/));
+        if(IsPrivate==0) form.Add(new MultipartFormDataSection("list", "1"));
+        else form.Add(new MultipartFormDataSection("list", "-1"));
         UnityWebRequest www = UnityWebRequest.Post(url, form);
 
         yield return www.SendWebRequest();
@@ -396,24 +425,16 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
             lm = GameObject.Find("LoginManager").GetComponent<LoginManager>();
             StartCoroutine("Upload2", lm.token);
         }
-        
-        // Shutdown our photo capture resource
-        photoCaptureObject.Dispose();
-        photoCaptureObject = null;
-        
-        if (!IsMyCapture)
-        {
-            HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
-            .OnPlayButtonClick();
-            HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
-                .IsCapturing = false;
-        }
         else
         {
+            // Shutdown our photo capture resource
+            photoCaptureObject.Dispose();
+            photoCaptureObject = null;
+
             IsMyCapture = false;
             Capture_Right_Menu.SetActive(false);
             CapturedImage.SetActive(true);
-            Texture2D texture = new Texture2D(0,0);
+            Texture2D texture = new Texture2D(0, 0);
             byte[] byteTexture = File.ReadAllBytes(filePath);
             if (byteTexture.Length > 0)
             {
@@ -447,7 +468,9 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
+        print(result);
         var r = JObject.Parse(result);
+        
         int cnt = 0;
         try
         {
@@ -465,7 +488,7 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
         ///////////////////
         for (int i = 0; i < cnt; i++)
         {
-            url = "https://unkidgen.sirv.com/"+filename+"?crop.type=face&crop.face=" + i;
+            url = "https://unkidgen.sirv.com/" + filename + "?crop.type=face&crop.face=" + i;
             request = UnityWebRequest.Get(url);
             yield return request.SendWebRequest();
             var data = request.downloadHandler.data;
@@ -478,38 +501,42 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
             www.SetRequestHeader("group-id", "SMB2NA4ND0");
             yield return www.SendWebRequest();
 
-
             result = www.downloadHandler.text;
             Debug.Log(result);
             var j = JObject.Parse(result);
             //print(j["subject_name"]);
-            if (j != null)
+            print(result[2]);
+            if (result[2].ToString().Equals("s"))
             {
-                if (j["subject_name"].ToString() != null)
-                {
-                    UID = j["subject_name"].ToString();
-                    PopUp.SetActive(true);
-                    CancelInvoke("PopUpCancel");
-                    Invoke("PopUpCancel", 15);
+                print(j);
+                UID = j["subject_name"].ToString();
+                PopUp.SetActive(true);
+                CancelInvoke("PopUpCancel");
+                Invoke("PopUpCancel", 15);
 
-                    string uid = j["subject_name"].ToString();
-                    //lm.UIDInfo.Add()
-                    url = "http://3.34.20.225:3000/main/getPersonName/" + uid;
-                    form = new List<IMultipartFormSection>();
+                string uid = j["subject_name"].ToString();
+                //lm.UIDInfo.Add()
+                url = "http://54.180.5.47:3000/main/getPersonName/" + uid;
+                form = new List<IMultipartFormSection>();
 
-                    www = UnityWebRequest.Get(url);
-                    yield return www.SendWebRequest();
-                    result = www.downloadHandler.text;
-                    r = JObject.Parse(result);
-                    string name = r["data"].First().SelectToken("name").ToString();
-                    print(name);
-                    Name_Text.text = name;
-                }
+                www = UnityWebRequest.Get(url);
+                yield return www.SendWebRequest();
+                result = www.downloadHandler.text;
+                r = JObject.Parse(result);
+                string name = r["data"].First().SelectToken("name").ToString();
+                print(name);
+                Name_Text.text = name;
             }
-            
+
         }
+        // Shutdown our photo capture resource
+        photoCaptureObject.Dispose();
+        photoCaptureObject = null;
 
-
+        HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
+            .OnPlayButtonClick();
+        HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
+            .IsCapturing = false;
     }
     float duration = 0.5f;
     float smoothness = 0.02f;

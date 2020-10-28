@@ -23,14 +23,15 @@ public class LoginManager : DontDestroy<LoginManager>
 
     public void OnKakaoLogin()
     {
-        string url = "http://3.34.20.225:3000/users/kakao";
-            /*"https://kauth.kakao.com/oauth/authorize?" +
+        /*string url = "http://3.34.20.225:3000/users/kakao";
+            "https://kauth.kakao.com/oauth/authorize?" +
             "client_id=edfe37094c314b31e73b9a24820274a7" +
             "&redirect_uri=https://www.naver.com" +
             "&response_type=code";*/
-        Application.OpenURL(url);
+        /*Application.OpenURL(url);
         //StartCoroutine("LoadLogin");
-        InvokeRepeating("Login", 2, 2);
+        InvokeRepeating("Login", 2, 2);*/
+        
     }
     
     protected override void OnStart()
