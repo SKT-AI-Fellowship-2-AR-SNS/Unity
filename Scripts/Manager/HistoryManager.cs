@@ -603,43 +603,50 @@ public class HistoryManager : MonoBehaviour
         string comment = "";
         if (LM.IsMyAlbum)
         {
-            comment = MyCommentInput.transform.GetChild(1).GetComponent<Text>().text;
+            comment = MyCommentInput.GetComponent<InputField>().text;
         }
         else
         {
-            comment = FriendCommentInput.transform.GetChild(1).GetComponent<Text>().text;
+            comment = FriendCommentInput.GetComponent<InputField>().text;
         }
             
         StartCoroutine(EditComment(historyIdx, comment));
     }
     IEnumerator EditComment(int historyIdx,string comment)
     {
+        print(historyIdx + " " + comment);
         string url = "http://54.180.5.47:3000/history/addComment";
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
-        string jsonStr = "{\n " +
-            "\"userIdx\": \""+"1"+"\",\n " +
-            "\"historyIdx\": \""+ historyIdx.ToString()+"\"\n" +
-            "\"comment\": \""+ comment+"\",\n " +
+        string jsonStr = "{\n   \"userIdx\": \""+"1"+"\",\n   \"historyIdx\": \""+ historyIdx.ToString()+"\",\n" +
+            "\"comment\": \""+ comment+"\"\n " +
             "}";
         var formData = System.Text.Encoding.UTF8.GetBytes(jsonStr);
+        form.Add(new MultipartFormDataSection(formData));
         /*form.Add(new MultipartFormDataSection("userIdx", "1"));
         form.Add(new MultipartFormDataSection("historyIdx", historyIdx.ToString()));
         form.Add(new MultipartFormDataSection("comment", comment));*/
 
         UnityWebRequest request = UnityWebRequest.Post(url, form);
+        request.uploadHandler = (UploadHandler)new UploadHandlerRaw(formData);
+        request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
         yield return request.SendWebRequest();
+
         string result = request.downloadHandler.text;
+        print(result);
         var r = JObject.Parse(result);
-        print(r);
+        //print(r);
         if (LM.IsMyAlbum)
         {
             Clear(MyCommentContent);
             StartCoroutine(getComment(curId));
+            MyHistoryEditComment.SetActive(false);
         }
         else
         {
             Clear(FriendCommentContent);
             StartCoroutine(getComment(curId));
+            FriendHistoryEditComment.SetActive(false);
         }
     }
     IEnumerator AllHistory(int[] id)

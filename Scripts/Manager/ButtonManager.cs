@@ -65,7 +65,7 @@ public class ButtonManager : MonoBehaviour
         Clear(content5);
         Clear(MyCommentContent);
     }
-    public void OnfriendHistoryClick()
+    public void OnfriendHistoryClick(string uid = "")
     {
         LM.IsMyAlbum = false;
         if (HoloLensFaceDetectionExample.gameObject.activeSelf == true)
@@ -73,8 +73,17 @@ public class ButtonManager : MonoBehaviour
             HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
             .OnStopButtonClick();
         }
-        HM.StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
-        HM.StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+        if (uid.Length == 0)
+        {
+            HM.StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+        }
+        else
+        {
+            CM.UID = uid;
+            HM.StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+        }
         FriendHistory_Panel.SetActive(true);
     }
     public void OnfriendHistoryBackClick()
@@ -92,7 +101,7 @@ public class ButtonManager : MonoBehaviour
         Clear(content6);
         Clear(FriendCommentContent);
     }
-    public void OnfriendHistoryLocClick()
+    public void OnfriendHistoryLocClick(string uid = "")
     {
         LM.IsMyAlbum = false;
         if (HoloLensFaceDetectionExample.gameObject.activeSelf == true)
@@ -100,8 +109,18 @@ public class ButtonManager : MonoBehaviour
             HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
             .OnStopButtonClick();
         }
-        HM.StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
-        HM.StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+        if (uid.Length == 0)
+        {
+            HM.StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+        }
+        else
+        {
+            CM.UID = uid;
+            HM.StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+        }
+        
         FriendHistory_Panel.SetActive(true);
         FriendHistory_Panel.transform.GetChild(0).gameObject.SetActive(false);
         FriendHistory_Panel.transform.GetChild(1).gameObject.SetActive(true);

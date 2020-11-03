@@ -51,11 +51,19 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     [SerializeField]
     GameObject TagPanel;
 
+    [SerializeField]
+    Text PopUpNumText;
+    [SerializeField]
+    GameObject PopUpContent;
+    [SerializeField]
+    GameObject ButtonManager;
+
     PhotoCapture photoCaptureObject = null;
     VideoCapture m_VideoCapture = null;
     Texture2D targetTexture = null;
     RegisterManager rm;
     LoginManager lm;
+    
 
     int cnt = 0;
     int capture_cnt = 0;
@@ -485,6 +493,9 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
         {
             //Debug.Log(cnt);
         }
+        print(cnt);
+        PopUpNumText.text = cnt.ToString()+"명";
+        Clear(PopUpContent);
         ///////////////////
         for (int i = 0; i < cnt; i++)
         {
@@ -508,8 +519,18 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
             print(result[2]);
             if (result[2].ToString().Equals("s"))
             {
+                GameObject g = Instantiate(Resources.Load("box")) as GameObject;
+                g.name = j["subject_name"].ToString();
+                g.transform.parent = PopUpContent.transform;
+                g.GetComponent<RectTransform>().localPosition = new Vector3(g.transform.position.x, g.transform.position.y, 0);
+                g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
+                g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+                g.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(() => ButtonManager.GetComponent<ButtonManager>().OnfriendHistoryClick(g.name));
+                g.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => ButtonManager.GetComponent<ButtonManager>().OnfriendHistoryLocClick(g.name));
+
+
                 print(j);
-                UID = j["subject_name"].ToString();
+                //UID = j["subject_name"].ToString();
                 PopUp.SetActive(true);
                 CancelInvoke("PopUpCancel");
                 Invoke("PopUpCancel", 15);
@@ -517,7 +538,6 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
                 string uid = j["subject_name"].ToString();
                 //lm.UIDInfo.Add()
                 url = "http://54.180.5.47:3000/main/getPersonName/" + uid;
-                form = new List<IMultipartFormSection>();
 
                 www = UnityWebRequest.Get(url);
                 yield return www.SendWebRequest();
@@ -525,7 +545,8 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
                 r = JObject.Parse(result);
                 string name = r["data"].First().SelectToken("name").ToString();
                 print(name);
-                Name_Text.text = name;
+                g.transform.GetChild(0).GetComponent<Text>().text = name;
+                //Name_Text.text = name;
             }
 
         }
@@ -537,6 +558,18 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
             .OnPlayButtonClick();
         HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
             .IsCapturing = false;
+    }
+    void Clear(GameObject content)
+    {
+        Transform[] childList = content.GetComponentsInChildren<Transform>(true);
+        if (childList != null)
+        {
+            for (int i = 1; i < childList.Length; i++)
+            {
+                if (childList[i] != transform)
+                    Destroy(childList[i].gameObject);
+            }
+        }
     }
     float duration = 0.5f;
     float smoothness = 0.02f;
@@ -578,6 +611,7 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     }
     void PopUpCancel()
     {
+        Clear(PopUpContent);
         PopUp.SetActive(false);
     }
     override protected void OnAwake()
