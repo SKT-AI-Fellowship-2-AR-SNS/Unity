@@ -12,9 +12,12 @@ public class LocationManager : MonoBehaviour
     Text text;
 
     private IWiFiAdapter WiFiAdapter;
+    LoginManager lm;
     // Start is called before the first frame update
     void Start()
     {
+        lm = GameObject.Find("LoginManager").GetComponent<LoginManager>();
+        text.text = lm.loc;
         WiFiAdapter = new UniversalWiFi();
         wifi();
         InvokeRepeating("wifi", 30, 60);
@@ -36,6 +39,7 @@ public class LocationManager : MonoBehaviour
         //byte[] data = Encoding.UTF8.GetBytes("{\n   \"bssid1\" : \"00:08:9f:01:cc:9c\",\n   \"bssid2\" : \"10:e3:c7:05:a9:c7\"\n}");
         string[] report = new string[2];
         report[0] = "00:08:9f:01:cc:9c"; report[1] = "10:e3:c7:05:a9:c7";
+        lm.bssid[0] = report[0]; lm.bssid[1] = report[1];
         byte[] data = Encoding.UTF8.GetBytes("{\n   \"bssid1\" : \"" + report[0] + "\",\n   \"bssid2\" : \"" + report[1] + "\"\n}");
         UnityWebRequest request = UnityWebRequest.Post(url, form);
         request.uploadHandler = (UploadHandler)new UploadHandlerRaw(data);
@@ -51,6 +55,7 @@ public class LocationManager : MonoBehaviour
         if (WiFiAdapter != null)
         {
             var report = WiFiAdapter.GetNetworkReport();
+            lm.bssid[0] = report[0]; lm.bssid[1] = report[1];
             string url = "http://54.180.5.47:3000/main/getLocation";
 
             List<IMultipartFormSection> form = new List<IMultipartFormSection>();

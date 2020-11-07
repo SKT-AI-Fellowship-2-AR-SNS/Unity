@@ -185,7 +185,7 @@ public class HistoryManager : MonoBehaviour
     }
     IEnumerator HeartClick()
     {
-        string url = "http://54.180.5.47:3000/history/like/1/" + curId;
+        string url = "http://54.180.5.47:3000/history/like/" + LM.UID + "/" + curId;
         byte[] data = null;
         UnityWebRequest request = UnityWebRequest.Put(url, data);
         yield return request.SendWebRequest();
@@ -289,15 +289,15 @@ public class HistoryManager : MonoBehaviour
         string url = "";
         if (state == 0)
         {
-            url = "http://54.180.5.47:3000/users/getFollowing/1?page=" + pageNum /*+ LM.UID*/;
+            url = "http://54.180.5.47:3000/users/getFollowing/"+LM.UID+"?page=" + pageNum /*+ LM.UID*/;
         }
         else if (state == 1)
         {
-            url = "http://54.180.5.47:3000/users/getFollower/1?page=" + pageNum /*+ LM.UID*/;
+            url = "http://54.180.5.47:3000/users/getFollower/"+LM.UID+"?page=" + pageNum /*+ LM.UID*/;
         }
         else
         {
-            url = "http://54.180.5.47:3000/users/getRecommend/1?page=" + pageNum /*+ LM.UID*/;
+            url = "http://54.180.5.47:3000/users/getRecommend/"+LM.UID+"?page=" + pageNum /*+ LM.UID*/;
         }
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         UnityWebRequest request = UnityWebRequest.Get(url);
@@ -464,7 +464,7 @@ public class HistoryManager : MonoBehaviour
     }
     IEnumerator GetHistory(int uid, int hitoryIdx)
     {
-        string url = "http://54.180.5.47:3000/history/1/" + hitoryIdx;
+        string url = "http://54.180.5.47:3000/history/" + LM.UID + "/" + hitoryIdx;
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
@@ -825,8 +825,8 @@ public class HistoryManager : MonoBehaviour
         {
             ClearTag(MyTagContent);
             Clear(MyCommentContent);
-            StartCoroutine("PreviewHistory", new int[] { 1, 1 });
-            StartCoroutine("AllHistory", new int[] { 1, 1 });
+            StartCoroutine("PreviewHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(LM.UID.ToString()) });
+            StartCoroutine("AllHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(LM.UID.ToString()) });
             MyHistory_LocMain.SetActive(true);
             MyHistory_LocHistory.SetActive(false);
         }
@@ -834,8 +834,8 @@ public class HistoryManager : MonoBehaviour
         {
             ClearTag(FriendTagContent);
             Clear(FriendCommentContent);
-            StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
-            StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+            StartCoroutine("PreviewHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });
+            StartCoroutine("AllHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });
             FriendHistory_LocMain.SetActive(true);
             FriendHistory_LocHistory.SetActive(false);
         }

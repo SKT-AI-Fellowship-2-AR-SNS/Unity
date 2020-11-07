@@ -57,6 +57,8 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     GameObject PopUpContent;
     [SerializeField]
     GameObject ButtonManager;
+    [SerializeField]
+    GameObject TagContent;
 
     PhotoCapture photoCaptureObject = null;
     VideoCapture m_VideoCapture = null;
@@ -77,10 +79,10 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     public bool camera;
     public int IsPrivate = 0;
 
-    public string TagList;
+    public List<string> list;
     public void OnPrivateClick()
     {
-        if (Private_Icon.GetComponent<RawImage>().color.b == 1)
+        if (Private_Icon.GetComponent<RawImage>().color.b == 1) // 나만보기
         {
             IsPrivate = 1;
             Private_Icon.GetComponent<RawImage>().color = new Color(1, 1, 0);
@@ -96,8 +98,8 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     }
     public void OnTagClick()
     {
+        list = new List<string>();
         StartCoroutine(TagLoad());
-        TagList = "";
         TagPanel.SetActive(true);
     }
     public void OnTagBackClick()
@@ -106,21 +108,58 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     }
     IEnumerator TagLoad()
     {
-        string url = "";
+        string url = "http://54.180.5.47:3000/history/tagList/" + lm.UID;
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
 
-        GameObject g = Instantiate(Resources.Load("follow")) as GameObject;
+        foreach(var a in r["data"].SelectToken("list"))
+        {
+            GameObject g = Instantiate(Resources.Load("Tag")) as GameObject;
 
-        g.GetComponent<RectTransform>().localPosition = new Vector3(g.transform.position.x, g.transform.position.y, 0);
-        g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
-        g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+            g.transform.parent = TagContent.transform;
+            g.GetComponent<RectTransform>().localPosition = new Vector3(g.transform.position.x, g.transform.position.y, 0);
+            g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
+            g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+            g.name = a["id"].ToString();
+            g.transform.GetChild(0).GetComponent<Text>().text = a["name"].ToString();
+            g.GetComponent<Button>().onClick.AddListener(() => OnTagImageClick(g));
+            StartCoroutine(DownloadImage(a["profileImage"].ToString(), g));
+        }
+        
 
         //g.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
         //g.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
+    }
+    public void OnTagImageClick(GameObject g)
+    {
+        if (g.GetComponent<RawImage>().color.r == 1)
+        {
+            g.GetComponent<RawImage>().color = new Color(100 / 255f, 100 / 255f, 100 / 255f);
+        }
+        else
+        {
+            g.GetComponent<RawImage>().color = new Color(1,1,1);
+        }
+
+        if (list.Contains(g.name)) {
+            list.Remove(g.name);
+        }
+        else
+        {
+            list.Add(g.name);
+        }
+    }
+    IEnumerator DownloadImage(string MediaUrl, GameObject img)
+    {
+        UnityWebRequest request = UnityWebRequestTexture.GetTexture(MediaUrl);
+        yield return request.SendWebRequest();
+        if (request.isNetworkError || request.isHttpError)
+            Debug.Log(request.error);
+        else
+            img.GetComponent<RawImage>().texture = ((DownloadHandlerTexture)request.downloadHandler).texture;
     }
     public void OnAfterTagClick()
     {
@@ -222,13 +261,20 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
         form.Add(new MultipartFormDataSection("text", InputField.GetComponent<InputField>().text));
         form.Add(new MultipartFormDataSection("location", Location_Text.GetComponent<Text>().text));
         form.Add(new MultipartFormDataSection("scope", "0"/*IsPrivate.ToString()*/));
-        if(IsPrivate==0) form.Add(new MultipartFormDataSection("list", "1"));
+        string TagList = "";
+        foreach(string s in list)
+        {
+            TagList += s+",";
+        }
+        if(IsPrivate==0) form.Add(new MultipartFormDataSection("list", TagList));
         else form.Add(new MultipartFormDataSection("list", "-1"));
         UnityWebRequest www = UnityWebRequest.Post(url, form);
 
         yield return www.SendWebRequest();
         string result = www.downloadHandler.text;
         print(result);
+        list.Clear();
+        Clear(TagContent);
         UploadImage.transform.GetChild(0).GetChild(0).GetChild(0).GetChild(0).GetComponent<InputField>().text = "";
         UploadImage.SetActive(false);
         Left_Menu.SetActive(true);
@@ -617,5 +663,6 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
     override protected void OnAwake()
     {
         base.OnAwake();
+        lm = GameObject.Find("LoginManager").GetComponent<LoginManager>();
     }
 }

@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using System.IO;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System.Text;
 
 public class LoginManager : DontDestroy<LoginManager>
 {
@@ -21,6 +22,9 @@ public class LoginManager : DontDestroy<LoginManager>
     [SerializeField]
     public int UID = 1;
 
+    private IWiFiAdapter WiFiAdapter = new UniversalWiFi();
+    public string[] bssid;
+    public string loc;
     public void OnKakaoLogin()
     {
         /*string url = "http://3.34.20.225:3000/users/kakao";
@@ -37,9 +41,61 @@ public class LoginManager : DontDestroy<LoginManager>
     protected override void OnStart()
     {
         base.OnStart();
+        bssid = new string[2];
         StartCoroutine("GetSirvToken");
+        //WiFiAdapter = new UniversalWiFi();
+        wifi();
     }
+    void wifi()
+    {
+        StartCoroutine("Scan");
+    }
+    IEnumerator Scan()
+    {
+#if UNITY_EDITOR
+        string url = "http://54.180.5.47:3000/main/getLocation";
 
+        List<IMultipartFormSection> form = new List<IMultipartFormSection>();
+        //byte[] data = Encoding.UTF8.GetBytes("{\n   \"bssid1\" : \"00:08:9f:01:cc:9c\",\n   \"bssid2\" : \"10:e3:c7:05:a9:c7\"\n}");
+        string[] report = new string[2];
+        report[0] = "00:08:9f:01:cc:9c"; report[1] = "10:e3:c7:05:a9:c7";
+        bssid[0] = report[0]; bssid[1] = report[1];
+        byte[] data = Encoding.UTF8.GetBytes("{\n   \"bssid1\" : \"" + report[0] + "\",\n   \"bssid2\" : \"" + report[1] + "\"\n}");
+        UnityWebRequest request = UnityWebRequest.Post(url, form);
+        request.uploadHandler = (UploadHandler)new UploadHandlerRaw(data);
+        request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+        yield return request.SendWebRequest();
+        string result = request.downloadHandler.text;
+        print(result);
+        var j = JObject.Parse(result);
+        //string time = j["data"].ToString();
+        loc = j["data"].ToString();
+        //text.text = time;
+#endif
+#if !UNITY_EDITOR
+        if (WiFiAdapter != null)
+        {
+            var report = WiFiAdapter.GetNetworkReport();
+            bssid[0] = report[0]; bssid[1] = report[1];
+            string url = "http://54.180.5.47:3000/main/getLocation";
+
+            List<IMultipartFormSection> form = new List<IMultipartFormSection>();
+            byte[] data = Encoding.UTF8.GetBytes("{\n   \"bssid1\" : \"" + report[0] + "\",\n   \"bssid2\" : \"" + report[1] + "\"\n}");
+            UnityWebRequest request = UnityWebRequest.Post(url, form);
+
+            request.uploadHandler = (UploadHandler)new UploadHandlerRaw(data);
+            request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            yield return request.SendWebRequest();
+            string result = request.downloadHandler.text;
+            var j = JObject.Parse(result);
+            //string time = j["data"].ToString();
+            loc = j["data"].ToString();
+            //text.text = time;
+        }
+#endif
+    }
     IEnumerator GetSirvToken()
     {
         string jsonStr = "{\n " +
