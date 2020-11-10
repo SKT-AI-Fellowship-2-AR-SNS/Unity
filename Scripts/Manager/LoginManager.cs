@@ -7,6 +7,7 @@ using System.IO;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Text;
+using DG.Tweening;
 
 public class LoginManager : DontDestroy<LoginManager>
 {
@@ -24,7 +25,7 @@ public class LoginManager : DontDestroy<LoginManager>
 
     private IWiFiAdapter WiFiAdapter = new UniversalWiFi();
     public string[] bssid;
-    public string loc;
+    public string loc="";
     public void OnKakaoLogin()
     {
         /*string url = "http://3.34.20.225:3000/users/kakao";
@@ -37,14 +38,19 @@ public class LoginManager : DontDestroy<LoginManager>
         InvokeRepeating("Login", 2, 2);*/
         
     }
-    
+    public void OnTween()
+    {
+        if(!DOTween.IsTweening(EventSystem.current.currentSelectedGameObject))
+            EventSystem.current.currentSelectedGameObject.transform.DOScale(1.06f, 0.1f).SetLoops(2, LoopType.Yoyo);
+    }
     protected override void OnStart()
     {
         base.OnStart();
         bssid = new string[2];
         StartCoroutine("GetSirvToken");
-        //WiFiAdapter = new UniversalWiFi();
+        WiFiAdapter = new UniversalWiFi();
         wifi();
+        InvokeRepeating("wifi", 10, 1000);
     }
     void wifi()
     {
@@ -67,7 +73,7 @@ public class LoginManager : DontDestroy<LoginManager>
         request.SetRequestHeader("Content-Type", "application/json");
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
-        print(result);
+        //print(result);
         var j = JObject.Parse(result);
         //string time = j["data"].ToString();
         loc = j["data"].ToString();

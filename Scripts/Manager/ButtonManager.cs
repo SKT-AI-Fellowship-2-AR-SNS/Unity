@@ -46,8 +46,8 @@ public class ButtonManager : MonoBehaviour
             HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
             .OnStopButtonClick();
         }
-        HM.StartCoroutine("PreviewHistory", new int[] { 1, 1 });
-        HM.StartCoroutine("AllHistory", new int[] { 1, 1 });
+        HM.StartCoroutine("PreviewHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(LM.UID.ToString()) });
+        HM.StartCoroutine("AllHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(LM.UID.ToString()) });
         MyHistory_Panel.SetActive(true);
     }
     public void OnMyHistoryBackClick()
@@ -75,14 +75,14 @@ public class ButtonManager : MonoBehaviour
         }
         if (uid.Length == 0)
         {
-            HM.StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
-            HM.StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("PreviewHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("AllHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });
         }
         else
         {
             CM.UID = uid;
-            HM.StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
-            HM.StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("PreviewHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("AllHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });
         }
         FriendHistory_Panel.SetActive(true);
     }
@@ -111,14 +111,14 @@ public class ButtonManager : MonoBehaviour
         }
         if (uid.Length == 0)
         {
-            HM.StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
-            HM.StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("PreviewHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("AllHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });
         }
         else
         {
             CM.UID = uid;
-            HM.StartCoroutine("PreviewHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
-            HM.StartCoroutine("AllHistory", new int[] { 1, int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("PreviewHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });
+            HM.StartCoroutine("AllHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });
         }
         
         FriendHistory_Panel.SetActive(true);

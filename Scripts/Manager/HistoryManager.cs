@@ -95,7 +95,7 @@ public class HistoryManager : MonoBehaviour
     [SerializeField]
     GameObject FriendPrevContent;
     [SerializeField]
-    GameObject FreindAllContent;
+    GameObject FriendAllContent;
 
     [SerializeField]
     GameObject MyTagContent;
@@ -191,14 +191,17 @@ public class HistoryManager : MonoBehaviour
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
-        print(r);
-        if (LM.IsMyAlbum)
+        //print(r);
+        if (r.HasValues)
         {
-            MyHistory_LocHistory.transform.GetChild(9).GetComponent<Text>().text = r["data"].SelectToken("likes").ToString();
-        }
-        else
-        {
-            FriendHistory_LocHistory.transform.GetChild(9).GetComponent<Text>().text = r["data"].SelectToken("likes").ToString();
+            if (LM.IsMyAlbum)
+            {
+                MyHistory_LocHistory.transform.GetChild(9).GetComponent<Text>().text = r["data"].SelectToken("likes").ToString();
+            }
+            else
+            {
+                FriendHistory_LocHistory.transform.GetChild(9).GetComponent<Text>().text = r["data"].SelectToken("likes").ToString();
+            }
         }
     }
     public void OnMyEditPanelClick()
@@ -304,26 +307,29 @@ public class HistoryManager : MonoBehaviour
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
-        if (r["status"].ToString().Equals("200"))
+        if (r.HasValues)
         {
-            print(r["data"]);
-            TotalPageNum = (int.Parse(r["data"].SelectToken("count").ToString()) / 7) +1;
-            foreach (var item in r["data"].SelectToken("list"))
+            if (r["status"].ToString().Equals("200"))
             {
-                //print(item);
-                GameObject g = Instantiate(Resources.Load("follow")) as GameObject;
-                g.name = item.SelectToken("id").ToString();
-                StartCoroutine(DownloadImage(item.SelectToken("profileImage").ToString(), g.transform.GetChild(0).gameObject));
-                g.transform.GetChild(1).GetComponent<Text>().text = item.SelectToken("name").ToString();
-                if (item.SelectToken("isFollowing").ToString().Equals("True")) g.transform.GetChild(2).gameObject.SetActive(true);
-                else g.transform.GetChild(3).gameObject.SetActive(true);
-                g.transform.parent = FollowContent.transform;
-                g.GetComponent<RectTransform>().localPosition = new Vector3(g.transform.position.x, g.transform.position.y, 0);
-                g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
-                g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+                //print(r["data"]);
+                TotalPageNum = (int.Parse(r["data"].SelectToken("count").ToString()) / 7) + 1;
+                foreach (var item in r["data"].SelectToken("list"))
+                {
+                    //print(item);
+                    GameObject g = Instantiate(Resources.Load("follow")) as GameObject;
+                    g.name = item.SelectToken("id").ToString();
+                    StartCoroutine(DownloadImage(item.SelectToken("profileImage").ToString(), g.transform.GetChild(0).gameObject));
+                    g.transform.GetChild(1).GetComponent<Text>().text = item.SelectToken("name").ToString();
+                    if (item.SelectToken("isFollowing").ToString().Equals("True")) g.transform.GetChild(2).gameObject.SetActive(true);
+                    else g.transform.GetChild(3).gameObject.SetActive(true);
+                    g.transform.SetParent(FollowContent.transform);
+                    g.GetComponent<RectTransform>().localPosition = new Vector3(g.transform.position.x, g.transform.position.y, 0);
+                    g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
+                    g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
 
-                g.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
-                g.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
+                    g.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
+                    g.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(() => OnFollow(int.Parse(item.SelectToken("id").ToString())));
+                }
             }
         }
     }
@@ -339,16 +345,19 @@ public class HistoryManager : MonoBehaviour
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
-        print(r);
-        if (r["status"].ToString().Equals("200"))
+        //print(r);
+        if (r.HasValues)
         {
-            Clear(FollowContent);
-            if (MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color.r==151/255f)
-                StartCoroutine(onFollowing(0));
-            if (MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color.g == 151 / 255f)
-                StartCoroutine(onFollowing(1));
-            if (MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color.b == 151 / 255f)
-                StartCoroutine(onFollowing(2));
+            if (r["status"].ToString().Equals("200"))
+            {
+                Clear(FollowContent);
+                if (MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color.r == 151 / 255f)
+                    StartCoroutine(onFollowing(0));
+                if (MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color.g == 151 / 255f)
+                    StartCoroutine(onFollowing(1));
+                if (MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color.b == 151 / 255f)
+                    StartCoroutine(onFollowing(2));
+            }
         }
     }
     public void OnFollowingTabClick()
@@ -398,11 +407,11 @@ public class HistoryManager : MonoBehaviour
     }
     public void OnMyHistoyLocHistoryClick(GameObject g, JToken j)
     {
-        print(j["historyIdx"].ToString());
+        //print(j["historyIdx"].ToString());
         curId = int.Parse(j["historyIdx"].ToString());
         StartCoroutine(getComment(int.Parse(g.name)));
         StartCoroutine(GetHistory(1, int.Parse(j["historyIdx"].ToString())));
-        print(j["alreadyLiked"].ToString());
+        //print(j["alreadyLiked"].ToString());
         if (LM.IsMyAlbum)
         {
             MyHistoryMain.SetActive(false);
@@ -456,6 +465,7 @@ public class HistoryManager : MonoBehaviour
             FriendHistory_LocHistory.transform.GetChild(6).GetComponent<Text>().text = j["datetime"].ToString();
             FriendHistory_LocHistory.transform.GetChild(7).GetComponent<Text>().text = j["day"].ToString();
             FriendHistory_LocHistory.transform.GetChild(5).GetChild(0).GetChild(0).GetChild(0).GetComponent<Text>().text = j["text"].ToString();
+
             if (j["alreadyLiked"].ToString().Equals("True"))
                 FriendHistory_LocHistory.transform.GetChild(8).GetComponent<RawImage>().color = new Color(1, 1, 1, 1);
             else
@@ -470,39 +480,42 @@ public class HistoryManager : MonoBehaviour
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
-        var a = r["data"].SelectToken("tag");
-        int t = -1;
-        if (a.ToString() != null)
+        if (r.HasValues)
         {
-            t = 0;
-            foreach (var i in a)
+            var a = r["data"].SelectToken("tag");
+            int t = -1;
+            if (a.ToString() != null)
             {
-                //GameObject g = Instantiate(Resources.Load("RawImage")) as GameObject;
+                t = 0;
+                foreach (var i in a)
+                {
+                    //GameObject g = Instantiate(Resources.Load("RawImage")) as GameObject;
 
-                if (LM.IsMyAlbum)
-                {
-                    MyTagContent.transform.GetChild(t).GetComponent<RawImage>().color = new Color(1,1,1);
-                    StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), MyTagContent.transform.GetChild(t).gameObject));
+                    if (LM.IsMyAlbum)
+                    {
+                        MyTagContent.transform.GetChild(t).GetComponent<RawImage>().color = new Color(1, 1, 1);
+                        StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), MyTagContent.transform.GetChild(t).gameObject));
+                    }
+                    else
+                    {
+                        FriendTagContent.transform.GetChild(t).GetComponent<RawImage>().color = new Color(1, 1, 1);
+                        StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), FriendTagContent.transform.GetChild(t).gameObject));
+                    }
+                    t++;
                 }
-                else
-                {
-                    FriendTagContent.transform.GetChild(t).GetComponent<RawImage>().color = new Color(1, 1, 1);
-                    StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), FriendTagContent.transform.GetChild(t).gameObject));
-                }
-                t++;            
-            } 
-        }
-        if (t != 4)
-        {
-            for (int i = t + 1; i < 5; i++)
+            }
+            if (t != 4)
             {
-                if (LM.IsMyAlbum)
+                for (int i = t + 1; i < 5; i++)
                 {
-                    MyTagContent.transform.GetChild(t).gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
-                }
-                else
-                {
-                    FriendTagContent.transform.GetChild(t).gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
+                    if (LM.IsMyAlbum)
+                    {
+                        MyTagContent.transform.GetChild(t).gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
+                    }
+                    else
+                    {
+                        FriendTagContent.transform.GetChild(t).gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
+                    }
                 }
             }
         }
@@ -515,60 +528,62 @@ public class HistoryManager : MonoBehaviour
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
-        //print(r);
-        var a = r["data"];
-        print(a.HasValues);
-        if (a.HasValues!=false)
+        if (r.HasValues)
         {
-            if (LM.IsMyAlbum)
+            //print(r);
+            var a = r["data"];
+            //print(a.HasValues);
+            if (a.HasValues != false)
             {
-                StartCoroutine(DownloadImage(a.First.SelectToken("profileImage").ToString(), MyHistoryCommentPanel.transform.GetChild(0).gameObject));
-                MyHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = a.First.SelectToken("name").ToString();
-                MyHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = a.First.SelectToken("comment").ToString();
-            }
-            else
-            {
-                StartCoroutine(DownloadImage(a.First.SelectToken("profileImage").ToString(), FriendHistoryCommentPanel.transform.GetChild(0).gameObject));
-                FriendHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = a.First.SelectToken("name").ToString();
-                FriendHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = a.First.SelectToken("comment").ToString();
-            }
-            foreach(var i in a)
-            {
-                GameObject g = Instantiate(Resources.Load("Comment_Panel")) as GameObject;
-                
                 if (LM.IsMyAlbum)
                 {
-                    g.transform.parent = MyHistoryCommentContent.transform;
-                    StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), g.transform.GetChild(0).gameObject));
+                    StartCoroutine(DownloadImage(a.First.SelectToken("profileImage").ToString(), MyHistoryCommentPanel.transform.GetChild(0).gameObject));
+                    MyHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = a.First.SelectToken("name").ToString();
+                    MyHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = a.First.SelectToken("comment").ToString();
                 }
                 else
                 {
-                    g.transform.parent = FriendHistoryCommentContent.transform;
-                    StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), g.transform.GetChild(0).gameObject));
+                    StartCoroutine(DownloadImage(a.First.SelectToken("profileImage").ToString(), FriendHistoryCommentPanel.transform.GetChild(0).gameObject));
+                    FriendHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = a.First.SelectToken("name").ToString();
+                    FriendHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = a.First.SelectToken("comment").ToString();
                 }
-                g.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
-                g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
-                g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
-                g.transform.GetChild(3).GetComponent<Text>().text = i.SelectToken("name").ToString();
-                g.transform.GetChild(4).GetComponent<Text>().text = i.SelectToken("comment").ToString();
-            }
-        }
-        else
-        {
-            if (LM.IsMyAlbum)
-            {
-                MyHistoryCommentPanel.transform.GetChild(0).gameObject.GetComponent<RawImage>().texture = null;
-                MyHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = "";
-                MyHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = "첫 댓글을 입력해주세요!";
+                foreach (var i in a)
+                {
+                    GameObject g = Instantiate(Resources.Load("Comment_Panel")) as GameObject;
+
+                    if (LM.IsMyAlbum)
+                    {
+                        g.transform.SetParent(MyHistoryCommentContent.transform);
+                        StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), g.transform.GetChild(0).gameObject));
+                    }
+                    else
+                    {
+                        g.transform.SetParent(FriendHistoryCommentContent.transform);
+                        StartCoroutine(DownloadImage(i.SelectToken("profileImage").ToString(), g.transform.GetChild(0).gameObject));
+                    }
+                    g.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
+                    g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+                    g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
+                    g.transform.GetChild(3).GetComponent<Text>().text = i.SelectToken("name").ToString();
+                    g.transform.GetChild(4).GetComponent<Text>().text = i.SelectToken("comment").ToString();
+                }
             }
             else
             {
-                FriendHistoryCommentPanel.transform.GetChild(0).gameObject.GetComponent<RawImage>().texture = null;
-                FriendHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = "";
-                FriendHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = "첫 댓글을 입력해주세요!";
+                if (LM.IsMyAlbum)
+                {
+                    MyHistoryCommentPanel.transform.GetChild(0).gameObject.GetComponent<RawImage>().texture = Resources.Load("default") as Texture2D;
+                    MyHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = "";
+                    MyHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = "첫 댓글을 입력해주세요!";
+                }
+                else
+                {
+                    FriendHistoryCommentPanel.transform.GetChild(0).gameObject.GetComponent<RawImage>().texture = Resources.Load("default") as Texture2D;
+                    FriendHistoryCommentPanel.transform.GetChild(3).GetComponent<Text>().text = "";
+                    FriendHistoryCommentPanel.transform.GetChild(4).GetComponent<Text>().text = "첫 댓글을 입력해주세요!";
+                }
             }
         }
-        
     }
     public void OnCommentEditClick()
     {
@@ -614,7 +629,7 @@ public class HistoryManager : MonoBehaviour
     }
     IEnumerator EditComment(int historyIdx,string comment)
     {
-        print(historyIdx + " " + comment);
+        //print(historyIdx + " " + comment);
         string url = "http://54.180.5.47:3000/history/addComment";
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         string jsonStr = "{\n   \"userIdx\": \""+"1"+"\",\n   \"historyIdx\": \""+ historyIdx.ToString()+"\",\n" +
@@ -633,20 +648,23 @@ public class HistoryManager : MonoBehaviour
         yield return request.SendWebRequest();
 
         string result = request.downloadHandler.text;
-        print(result);
+        //print(result);
         var r = JObject.Parse(result);
-        //print(r);
-        if (LM.IsMyAlbum)
+        if (r.HasValues)
         {
-            Clear(MyCommentContent);
-            StartCoroutine(getComment(curId));
-            MyHistoryEditComment.SetActive(false);
-        }
-        else
-        {
-            Clear(FriendCommentContent);
-            StartCoroutine(getComment(curId));
-            FriendHistoryEditComment.SetActive(false);
+            //print(r);
+            if (LM.IsMyAlbum)
+            {
+                Clear(MyCommentContent);
+                StartCoroutine(getComment(curId));
+                MyHistoryEditComment.SetActive(false);
+            }
+            else
+            {
+                Clear(FriendCommentContent);
+                StartCoroutine(getComment(curId));
+                FriendHistoryEditComment.SetActive(false);
+            }
         }
     }
     IEnumerator AllHistory(int[] id)
@@ -657,52 +675,60 @@ public class HistoryManager : MonoBehaviour
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
-        print(r);
-        if (LM.IsMyAlbum)
+        if (r.HasValues)
         {
-            MyName_Text2.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
-            url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
-            StartCoroutine(DownloadImage(url, My_Image2));
-        }
-        else
-        {
-            FriendName_Text2.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
-            url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
-            StartCoroutine(DownloadImage(url, Friend_Image2));
-        }
+            //print(r);
+            if (r.HasValues)
+            {
+                if (LM.IsMyAlbum)
+                {
+                    MyHistory_LocMain.transform.GetChild(0).GetChild(3).GetComponent<Text>().text = r["data"].SelectToken("history").First.SelectToken("location").ToString();
+                    MyName_Text2.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+                    url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
+                    StartCoroutine(DownloadImage(url, My_Image2));
+                }
+                else
+                {
+                    FriendHistory_LocMain.transform.GetChild(0).GetChild(3).GetComponent<Text>().text = r["data"].SelectToken("history").First.SelectToken("location").ToString();
+                    FriendName_Text2.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+                    url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
+                    StartCoroutine(DownloadImage(url, Friend_Image2));
+                }
 
-        var a = r["data"].SelectToken("history");
-        List<GameObject> list = new List<GameObject>();
-        foreach (var item in a)
-        {
-            GameObject g = null;
-            if (item["contents_type"].ToString().Equals("image"))
-            {
-                g = Instantiate(Resources.Load("History")) as GameObject;
-                g.name = item["historyIdx"].ToString();
+                var a = r["data"].SelectToken("history");
+                List<GameObject> list = new List<GameObject>();
+                foreach (var item in a)
+                {
+                    GameObject g = null;
+                    if (item["contents_type"].ToString().Equals("image"))
+                    {
+                        g = Instantiate(Resources.Load("History")) as GameObject;
+                        g.name = item["historyIdx"].ToString();
+                    }
+                    else
+                    {
+                        g = Instantiate(Resources.Load("Video")) as GameObject;
+                        g.name = item["historyIdx"].ToString();
+                        list.Add(g);
+                    }
+                    if (LM.IsMyAlbum)
+                    {
+                        g.transform.SetParent(MyHistory_LocMain.transform.GetChild(2).GetChild(0).GetChild(0));
+                    }
+                    else
+                    {
+                        g.transform.SetParent(FriendHistory_LocMain.transform.GetChild(2).GetChild(0).GetChild(0));
+                    }
+                    g.GetComponent<RectTransform>().localPosition = new Vector3(120, -50, 0);
+                    g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+                    g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
+                    g.transform.GetChild(0).GetComponent<Text>().text = item["datetime"].ToString() + " " + item["day"].ToString();
+
+                    url = item["image"].ToString();
+                    StartCoroutine(DownloadImage(url, g));
+                    g.GetComponent<Button>().onClick.AddListener(() => OnMyHistoyLocHistoryClick(g, item));
+                }
             }
-            else
-            {
-                g = Instantiate(Resources.Load("Video")) as GameObject;
-                g.name = item["historyIdx"].ToString();
-                list.Add(g);
-            }
-            if (LM.IsMyAlbum)
-            {
-                g.transform.parent = MyHistory_LocMain.transform.GetChild(2).GetChild(0).GetChild(0);
-            }
-            else
-            {
-                g.transform.parent = FriendHistory_LocMain.transform.GetChild(2).GetChild(0).GetChild(0);
-            }
-            g.GetComponent<RectTransform>().localPosition = new Vector3(120, -50, 0);
-            g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
-            g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
-            g.transform.GetChild(0).GetComponent<Text>().text = item["datetime"].ToString()+" "+ item["day"].ToString();
-            
-            url = item["image"].ToString();
-            StartCoroutine(DownloadImage(url, g));
-            g.GetComponent<Button>().onClick.AddListener(() => OnMyHistoyLocHistoryClick(g, item));         
         }
     }
 
@@ -714,71 +740,74 @@ public class HistoryManager : MonoBehaviour
         yield return request.SendWebRequest();
         string result = request.downloadHandler.text;
         var r = JObject.Parse(result);
-        //print(result);
-        print(r["data"]);
-        if (LM.IsMyAlbum)
+        if (r.HasValues)
         {
-            MyFollwingNum = r["data"].SelectToken("profile").First.SelectToken("followingCount").ToString();
-            MyFollwerNum = r["data"].SelectToken("profile").First.SelectToken("followerCount").ToString();
-
-            MyName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
-            MyStatusText.text = r["data"].SelectToken("profile").First.SelectToken("message").ToString();
-            MyFollowingCount.text = MyFollwingNum;
-            MyFollowerCount.text = MyFollwerNum;
-            url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
-            StartCoroutine(DownloadImage(url, My_Image));
-        }
-        else
-        {
-            FriendName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
-            FriendStatusText.text = r["data"].SelectToken("profile").First.SelectToken("message").ToString();
-            FriendFollowingCount.text = r["data"].SelectToken("profile").First.SelectToken("followingCount").ToString();
-            FriendFollowerCount.text = r["data"].SelectToken("profile").First.SelectToken("followerCount").ToString();
-            url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
-            StartCoroutine(DownloadImage(url, Friend_Image));
-        }
-        
-
-        var a = r["data"].SelectToken("history");
-        //List<GameObject> list = new List<GameObject>();
-        int check = 0;
-        foreach (var item in a)
-        {
-            GameObject g = null;
-            if (check == 3) break;
-            //Debug.Log(item);
-            
-            if (item["contents_type"].ToString().Equals("image"))
-            {
-                g = Instantiate(Resources.Load("History")) as GameObject;
-                g.name = item["historyIdx"].ToString();
-            }
-            else
-            {
-                g = Instantiate(Resources.Load("Video")) as GameObject;
-                g.name = item["historyIdx"].ToString();
-                //list.Add(g);
-            }
-            
+            //print(result);
+            //print(r["data"]);
             if (LM.IsMyAlbum)
             {
-                g.transform.parent = MyHistoryMain.transform.GetChild(2).GetChild(0).GetChild(0).GetChild(0).GetChild(1).
-                GetChild(0).GetChild(0).GetChild(0);
+                MyFollwingNum = r["data"].SelectToken("profile").First.SelectToken("followingCount").ToString();
+                MyFollwerNum = r["data"].SelectToken("profile").First.SelectToken("followerCount").ToString();
+
+                MyName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+                MyStatusText.text = r["data"].SelectToken("profile").First.SelectToken("message").ToString();
+                MyFollowingCount.text = MyFollwingNum;
+                MyFollowerCount.text = MyFollwerNum;
+                url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
+                StartCoroutine(DownloadImage(url, My_Image));
             }
             else
             {
-                g.transform.parent = FriendHistoryMain.transform.GetChild(2).GetChild(0).GetChild(0).GetChild(0).GetChild(1).
-                GetChild(0).GetChild(0).GetChild(0);
+                FriendName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+                FriendStatusText.text = r["data"].SelectToken("profile").First.SelectToken("message").ToString();
+                FriendFollowingCount.text = r["data"].SelectToken("profile").First.SelectToken("followingCount").ToString();
+                FriendFollowerCount.text = r["data"].SelectToken("profile").First.SelectToken("followerCount").ToString();
+                url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
+                StartCoroutine(DownloadImage(url, Friend_Image));
             }
-            g.GetComponent<RectTransform>().localPosition = new Vector3(82, -60, 0);
-            g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
-            g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
-            g.transform.GetChild(0).GetComponent<Text>().text = item["datetime"].ToString() + " " + item["day"].ToString();
 
-            url = item["image"].ToString();
-            StartCoroutine(DownloadImage(url, g));
-            g.GetComponent<Button>().onClick.AddListener(() => OnMyHistoyLocHistoryClick(g, item));
-            check++;
+
+            var a = r["data"].SelectToken("history");
+            //List<GameObject> list = new List<GameObject>();
+            int check = 0;
+            foreach (var item in a)
+            {
+                GameObject g = null;
+                if (check == 3) break;
+                //Debug.Log(item);
+
+                if (item["contents_type"].ToString().Equals("image"))
+                {
+                    g = Instantiate(Resources.Load("History")) as GameObject;
+                    g.name = item["historyIdx"].ToString();
+                }
+                else
+                {
+                    g = Instantiate(Resources.Load("Video")) as GameObject;
+                    g.name = item["historyIdx"].ToString();
+                    //list.Add(g);
+                }
+
+                if (LM.IsMyAlbum)
+                {
+                    g.transform.SetParent(MyHistoryMain.transform.GetChild(2).GetChild(0).GetChild(0).GetChild(0).GetChild(1).
+                    GetChild(0).GetChild(0).GetChild(0));
+                }
+                else
+                {
+                    g.transform.SetParent(FriendHistoryMain.transform.GetChild(2).GetChild(0).GetChild(0).GetChild(0).GetChild(1).
+                    GetChild(0).GetChild(0).GetChild(0));
+                }
+                g.GetComponent<RectTransform>().localPosition = new Vector3(82, -60, 0);
+                g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+                g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
+                g.transform.GetChild(0).GetComponent<Text>().text = item["datetime"].ToString() + " " + item["day"].ToString();
+
+                url = item["image"].ToString();
+                StartCoroutine(DownloadImage(url, g));
+                g.GetComponent<Button>().onClick.AddListener(() => OnMyHistoyLocHistoryClick(g, item));
+                check++;
+            }
         }
     }
 
@@ -787,9 +816,15 @@ public class HistoryManager : MonoBehaviour
         UnityWebRequest request = UnityWebRequestTexture.GetTexture(MediaUrl);
         yield return request.SendWebRequest();
         if (request.isNetworkError || request.isHttpError)
-            Debug.Log(request.error);
+        {
+            //img.GetComponent<RawImage>().texture = ((DownloadHandlerTexture)request.downloadHandler).texture;
+            // Debug.Log(request.error);
+        }
         else
-            img.GetComponent<RawImage>().texture = ((DownloadHandlerTexture)request.downloadHandler).texture;
+        {
+            if(img!=null)
+                img.GetComponent<RawImage>().texture = ((DownloadHandlerTexture)request.downloadHandler).texture;
+        }
     }
     void Clear(GameObject content)
     {
@@ -818,11 +853,11 @@ public class HistoryManager : MonoBehaviour
     }
     public void OnMyHistoyLocBackClick()
     {
-        Clear(MyPrevContent);
-        Clear(MyAllContent);
-        
         if (LM.IsMyAlbum)
         {
+            Clear(MyPrevContent);
+            Clear(MyAllContent);
+
             ClearTag(MyTagContent);
             Clear(MyCommentContent);
             StartCoroutine("PreviewHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(LM.UID.ToString()) });
@@ -832,6 +867,9 @@ public class HistoryManager : MonoBehaviour
         }
         else
         {
+            Clear(FriendPrevContent);
+            Clear(FriendAllContent);
+
             ClearTag(FriendTagContent);
             Clear(FriendCommentContent);
             StartCoroutine("PreviewHistory", new int[] { int.Parse(LM.UID.ToString()), int.Parse(CM.UID.ToString()) });

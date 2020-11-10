@@ -17,10 +17,11 @@ public class LocationManager : MonoBehaviour
     void Start()
     {
         lm = GameObject.Find("LoginManager").GetComponent<LoginManager>();
-        text.text = lm.loc;
-        WiFiAdapter = new UniversalWiFi();
-        wifi();
-        InvokeRepeating("wifi", 30, 60);
+        //text.text = lm.loc;
+        //WiFiAdapter = new UniversalWiFi();
+        //wifi();
+        //InvokeRepeating("wifi", 30, 30);
+        InvokeRepeating("loc",1,5);
     }
     /*void Update()
     {
@@ -29,6 +30,13 @@ public class LocationManager : MonoBehaviour
     void wifi()
     {
         StartCoroutine("Scan");
+    }
+    void loc()
+    {
+        if (lm.loc.Length > 0)
+        {
+            text.text = lm.loc;
+        }
     }
     IEnumerator Scan()
     {
