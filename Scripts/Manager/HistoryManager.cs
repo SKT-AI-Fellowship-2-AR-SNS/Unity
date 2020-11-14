@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using OpenCVForUnity.VideoModule;
+using System.IO;
 //using UnityEditor.UIElements;
 
 public class HistoryManager : MonoBehaviour
@@ -26,6 +27,8 @@ public class HistoryManager : MonoBehaviour
     GameObject myLocMore_Icon;
     [SerializeField]
     GameObject MyHistoryMain;
+    [SerializeField]
+    GameObject MyHistoryProfile;
     [SerializeField]
     GameObject MyHistory_LocMain;
     [SerializeField]
@@ -49,6 +52,8 @@ public class HistoryManager : MonoBehaviour
     [SerializeField]
     GameObject My_Image2;
 
+    [SerializeField]
+    GameObject FriendHistory_Panel;
     [SerializeField]
     GameObject FriendLoc_Icon;
     [SerializeField]
@@ -76,7 +81,11 @@ public class HistoryManager : MonoBehaviour
     [SerializeField]
     GameObject MyHistory_Follow;
     [SerializeField]
+    GameObject FriendHistory_Follow;
+    [SerializeField]
     GameObject FollowContent;
+    [SerializeField]
+    GameObject FFollowContent;
     [SerializeField]
     GameObject FriendHistory_Comment;
     [SerializeField]
@@ -131,6 +140,20 @@ public class HistoryManager : MonoBehaviour
     [SerializeField]
     GameObject FriendCommentContent;
 
+    [SerializeField]
+    GameObject LoadPanel;
+    [SerializeField]
+    GameObject AlbumContent;
+    [SerializeField]
+    Text MyProfilePlaceHolder;
+    [SerializeField]
+    Text MyProfileText;
+
+    [SerializeField]
+    Text MyWithText;
+    [SerializeField]
+    Text FriendWithText;
+
     LoginManager LM;
     CaptureManager CM;
 
@@ -147,17 +170,138 @@ public class HistoryManager : MonoBehaviour
     public string MyFollwerNum;
 
     public int curId = 0;
-
+    public string cnt;
+    public bool IsWriting;
     void Awake()
     {
         LM = GameObject.Find("LoginManager").GetComponent<LoginManager>();
         LM.IsMyAlbum = true;
         CM = GameObject.Find("CaptureManager").GetComponent<CaptureManager>();
     }
-    void Start()
+    /*void Start()
     {
         //StartCoroutine("AllHistory", 1);
         //StartCoroutine("PreviewHistory", 1);
+    }*/
+    public void OnMyProfileStatusClick()
+    {
+        IsWriting = true;
+    }
+    public void OnMyProfileStatusUpload()
+    {
+        if (IsWriting)
+        {
+            StartCoroutine(statusUpload(MyProfileText.text));
+            MyProfileText.text = "";
+            IsWriting = false;
+        } 
+    }
+
+    IEnumerator statusUpload(string msg)
+    {
+        //print(msg);
+        string url = "http://54.180.5.47:3000/users/editText";
+        List<IMultipartFormSection> form = new List<IMultipartFormSection>();
+        //form.Add(new MultipartFormDataSection("message", msg));
+        //form.Add(new MultipartFormDataSection("id", LM.UID.ToString()));
+        string jsonStr = "{\n   \"id\": \"" + LM.UID.ToString() + "\",\n" +
+            "\"message\": \"" + msg + "\"" +
+            "}";
+        var formData = System.Text.Encoding.UTF8.GetBytes(jsonStr);
+        form.Add(new MultipartFormDataSection(formData));
+
+        UnityWebRequest request = UnityWebRequest.Post(url, form);
+        request.uploadHandler = (UploadHandler)new UploadHandlerRaw(formData);
+        request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+        yield return request.SendWebRequest();
+        string result = request.downloadHandler.text;
+
+        //print(result);
+        var r = JObject.Parse(result);
+        if (r["status"].ToString().Equals("200"))
+        {
+            string tmpMSG = r["data"].SelectToken("message").ToString();
+            MyProfilePlaceHolder.text = tmpMSG;
+            MyHistoryMain.transform.GetChild(0).GetChild(2).GetComponent<Text>().text = tmpMSG;
+        }
+    }
+    public void OnMyProfileImageClick()
+    {
+        LoadPanel.SetActive(true);
+        string path = Application.persistentDataPath;
+        string[] s1 = Directory.GetFiles(path);
+        for (int i = 0; i < s1.Length; i++)
+        {
+            GameObject img = Instantiate(Resources.Load("RawImage")) as GameObject;
+            img.name = i + "";
+            img.transform.SetParent(AlbumContent.transform);
+            img.GetComponent<RectTransform>().localPosition = new Vector3(img.transform.position.x, img.transform.position.y, 0);
+            img.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+            img.GetComponent<RectTransform>().localRotation = Quaternion.Euler(0, 0, 0);
+            img.GetComponent<Button>().onClick.AddListener(() => OnClickImage(img.name));
+            //Debug.Log(s1[i]);
+            LoadImage(s1[i], img);
+        }
+    }
+    public void OnClickImage(string ImgCnt)
+    {
+        cnt = ImgCnt;
+    }
+    public void OnSelectClick()
+    {
+        StartCoroutine(UploadImage());
+        LoadPanel.SetActive(false);
+    }
+    void LoadImage(string path, GameObject img)
+    {
+        Texture2D texture = null;
+        byte[] byteTexture = System.IO.File.ReadAllBytes(path);
+        if (byteTexture.Length > 0)
+        {
+            texture = new Texture2D(0, 0);
+            texture.LoadImage(byteTexture);
+        }
+        img.GetComponent<RawImage>().texture = texture;
+    }
+    IEnumerator UploadImage()
+    {
+        string path = Application.persistentDataPath;
+        string[] s1 = Directory.GetFiles(path);
+
+        string url = "http://54.180.5.47:3000/users/editImg";
+        List<IMultipartFormSection> form = new List<IMultipartFormSection>();
+        byte[] data = File.ReadAllBytes(s1[int.Parse(cnt)]);
+        form.Add(new MultipartFormFileSection("img", data, s1[int.Parse(cnt)], "image/jpg"));
+        form.Add(new MultipartFormDataSection("id", LM.UID.ToString()));
+        UnityWebRequest request = UnityWebRequest.Post(url, form);
+
+        yield return request.SendWebRequest();
+        string result = request.downloadHandler.text;
+        //print(result);//
+        var r = JObject.Parse(result);
+        if (r["status"].ToString().Equals("200"))
+        {
+            string imgURL = r["data"].SelectToken("profileImage").ToString();
+            StartCoroutine(DownloadImage(imgURL, MyHistoryProfile.transform.GetChild(0).GetChild(0).gameObject));
+            StartCoroutine(DownloadImage(imgURL, MyHistoryMain.transform.GetChild(0).GetChild(0).gameObject));
+            StartCoroutine(DownloadImage(imgURL, MyHistory_LocMain.transform.GetChild(0).GetChild(0).gameObject));
+        }
+
+    }
+    public void OnMyProfileImageBackClick()
+    {
+        LoadPanel.SetActive(false);
+    }
+    public void OnProfileClick()
+    {
+        MyHistoryMain.SetActive(false);
+        MyHistoryProfile.SetActive(true);
+    }
+    public void OnProfileBackClick()
+    {
+        MyHistoryMain.SetActive(true);
+        MyHistoryProfile.SetActive(false);
     }
     public void OnMyHeartClick()
     {
@@ -242,22 +386,44 @@ public class HistoryManager : MonoBehaviour
     }
     public void OnFollowClick()
     {
-        if (MyHistory_Panel.activeSelf == false) MyHistory_Panel.SetActive(true);
-        MyHistoryMain.SetActive(false);
-        MyHistory_Follow.SetActive(true);
+        if (LM.IsMyAlbum)
+        {
+            if (MyHistory_Panel.activeSelf == false) MyHistory_Panel.SetActive(true);
+            MyHistoryMain.SetActive(false);
+            MyHistory_Follow.SetActive(true);
+        }
+        else
+        {
+            if (FriendHistory_Panel.activeSelf == false) FriendHistory_Panel.SetActive(true);
+            FriendHistoryMain.SetActive(false);
+            FriendHistory_Follow.SetActive(true);
+        }
+        
         StartCoroutine(onFollowing(0));
     }
     public void OnFollowBackClick()
     {
         if (MyProfile.activeSelf == true)
         {
+            Clear(FollowContent);
             MyHistory_Follow.SetActive(false);
             MyHistoryMain.SetActive(true);
             MyHistory_Panel.SetActive(false);
             return;
         }
-        MyHistory_Follow.SetActive(false);
-        MyHistoryMain.SetActive(true);
+        if (LM.IsMyAlbum)
+        {
+            Clear(FollowContent);
+            MyHistory_Follow.SetActive(false);
+            MyHistoryMain.SetActive(true);
+        }
+        else
+        {
+            Clear(FFollowContent);
+            FriendHistory_Follow.SetActive(false);
+            FriendHistoryMain.SetActive(true);
+        }
+        
     }
     public void OnFollowLeftClick()
     {
@@ -290,18 +456,37 @@ public class HistoryManager : MonoBehaviour
     IEnumerator onFollowing(int state)
     {
         string url = "";
-        if (state == 0)
+        if (LM.IsMyAlbum)
         {
-            url = "http://54.180.5.47:3000/users/getFollowing/"+LM.UID+"?page=" + pageNum /*+ LM.UID*/;
-        }
-        else if (state == 1)
-        {
-            url = "http://54.180.5.47:3000/users/getFollower/"+LM.UID+"?page=" + pageNum /*+ LM.UID*/;
+            if (state == 0)
+            {
+                url = "http://54.180.5.47:3000/users/myFollowing/" + LM.UID + "?page=" + pageNum /*+ LM.UID*/;
+            }
+            else if (state == 1)
+            {
+                url = "http://54.180.5.47:3000/users/myFollower/" + LM.UID + "?page=" + pageNum /*+ LM.UID*/;
+            }
+            else
+            {
+                url = "http://54.180.5.47:3000/users/getRecommend/" + LM.UID + "?page=" + pageNum /*+ LM.UID*/;
+            }
         }
         else
         {
-            url = "http://54.180.5.47:3000/users/getRecommend/"+LM.UID+"?page=" + pageNum /*+ LM.UID*/;
+            if (state == 0)
+            {
+                url = "http://54.180.5.47:3000/users/otherFollowing/" + LM.UID + "/" + CM.UID + "?page=" + pageNum /*+ LM.UID*/;
+            }
+            else if (state == 1)
+            {
+                url = "http://54.180.5.47:3000/users/otherFollower/" + LM.UID + "/" + CM.UID + "?page=" + pageNum /*+ LM.UID*/;
+            }
+            else
+            {
+                url = "http://54.180.5.47:3000/users/getRecommend/" + LM.UID + "?page=" + pageNum /*+ LM.UID*/;
+            }
         }
+        
         List<IMultipartFormSection> form = new List<IMultipartFormSection>();
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
@@ -322,7 +507,10 @@ public class HistoryManager : MonoBehaviour
                     g.transform.GetChild(1).GetComponent<Text>().text = item.SelectToken("name").ToString();
                     if (item.SelectToken("isFollowing").ToString().Equals("True")) g.transform.GetChild(2).gameObject.SetActive(true);
                     else g.transform.GetChild(3).gameObject.SetActive(true);
-                    g.transform.SetParent(FollowContent.transform);
+                    if (LM.IsMyAlbum)
+                        g.transform.SetParent(FollowContent.transform);
+                    else
+                        g.transform.SetParent(FFollowContent.transform);
                     g.GetComponent<RectTransform>().localPosition = new Vector3(g.transform.position.x, g.transform.position.y, 0);
                     g.GetComponent<RectTransform>().localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
                     g.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
@@ -350,36 +538,70 @@ public class HistoryManager : MonoBehaviour
         {
             if (r["status"].ToString().Equals("200"))
             {
-                Clear(FollowContent);
-                if (MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color.r == 151 / 255f)
-                    StartCoroutine(onFollowing(0));
-                if (MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color.g == 151 / 255f)
-                    StartCoroutine(onFollowing(1));
-                if (MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color.b == 151 / 255f)
-                    StartCoroutine(onFollowing(2));
+                if (LM.IsMyAlbum)
+                {
+                    Clear(FollowContent);
+                    if (MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color.r == 151 / 255f)
+                        StartCoroutine(onFollowing(0));
+                    if (MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color.g == 151 / 255f)
+                        StartCoroutine(onFollowing(1));
+                    if (MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color.b == 151 / 255f)
+                        StartCoroutine(onFollowing(2));
+                }
+                else
+                {
+                    Clear(FFollowContent);
+                    if (FriendHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color.r == 151 / 255f)
+                        StartCoroutine(onFollowing(0));
+                    if (FriendHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color.g == 151 / 255f)
+                        StartCoroutine(onFollowing(1));
+                }
+                
             }
         }
     }
     public void OnFollowingTabClick()
     {
         pageNum = 1;
-        Clear(FollowContent);
+        if (LM.IsMyAlbum)
+        {
+            Clear(FollowContent);
+            MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color = new Color(151 / 255f, 151 / 255f, 151 / 255f);
+            MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
+            MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
+        }
+        else
+        {
+            Clear(FFollowContent);
+            FriendHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color = new Color(151 / 255f, 151 / 255f, 151 / 255f);
+            FriendHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
+        }
+        
         StartCoroutine(onFollowing(0));
         //MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
-        MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color = new Color(151 / 255f, 151 / 255f, 151 / 255f);
-        MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
-        MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
+        
     }
     
     public void OnFollowerTabClick()
     {
         pageNum = 1;
-        Clear(FollowContent);
+        if (LM.IsMyAlbum)
+        {
+            Clear(FollowContent);
+            MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
+            MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color = new Color(151 / 255f, 151 / 255f, 151 / 255f);
+            MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
+        }
+        else
+        {
+            Clear(FFollowContent);
+            FriendHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
+            FriendHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color = new Color(151 / 255f, 151 / 255f, 151 / 255f);
+        }
+        
         StartCoroutine(onFollowing(1));
         //MyHistory_Follow.transform.GetChild(1).gameObject.SetActive(true);
-        MyHistory_Follow.transform.GetChild(2).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
-        MyHistory_Follow.transform.GetChild(3).GetComponent<RawImage>().color = new Color(151 / 255f, 151 / 255f, 151 / 255f);
-        MyHistory_Follow.transform.GetChild(4).GetComponent<RawImage>().color = new Color(102 / 255f, 101 / 255f, 100 / 255f);
+        
     }
     public void OnRecommendTabClick()
     {
@@ -484,8 +706,14 @@ public class HistoryManager : MonoBehaviour
         {
             var a = r["data"].SelectToken("tag");
             int t = -1;
-            if (a.ToString() != null)
+            //print(a.ToString());
+            if (!a.ToString().Equals("[]"))
             {
+                //print("1");
+                if (LM.IsMyAlbum)
+                    MyWithText.gameObject.SetActive(true);
+                else
+                    FriendWithText.gameObject.SetActive(true);
                 t = 0;
                 foreach (var i in a)
                 {
@@ -504,17 +732,25 @@ public class HistoryManager : MonoBehaviour
                     t++;
                 }
             }
+            else
+            {
+                //print("2");
+                if (LM.IsMyAlbum)
+                    MyWithText.gameObject.SetActive(false);
+                else
+                    FriendWithText.gameObject.SetActive(false);
+            }
             if (t != 4)
             {
                 for (int i = t + 1; i < 5; i++)
                 {
                     if (LM.IsMyAlbum)
                     {
-                        MyTagContent.transform.GetChild(t).gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
+                        MyTagContent.transform.GetChild(i).gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
                     }
                     else
                     {
-                        FriendTagContent.transform.GetChild(t).gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
+                        FriendTagContent.transform.GetChild(i).gameObject.GetComponent<RawImage>().color = new Color(5 / 255f, 5 / 255f, 5 / 255f);
                     }
                 }
             }
@@ -750,11 +986,14 @@ public class HistoryManager : MonoBehaviour
                 MyFollwerNum = r["data"].SelectToken("profile").First.SelectToken("followerCount").ToString();
 
                 MyName_Text.text = r["data"].SelectToken("profile").First.SelectToken("name").ToString();
+                MyHistoryProfile.transform.GetChild(0).GetChild(1).GetComponent<Text>().text = MyName_Text.text;
                 MyStatusText.text = r["data"].SelectToken("profile").First.SelectToken("message").ToString();
+                MyProfilePlaceHolder.text = MyStatusText.text;
                 MyFollowingCount.text = MyFollwingNum;
                 MyFollowerCount.text = MyFollwerNum;
                 url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
                 StartCoroutine(DownloadImage(url, My_Image));
+                StartCoroutine(DownloadImage(url, MyHistoryProfile.transform.GetChild(0).GetChild(0).gameObject));
             }
             else
             {
@@ -765,7 +1004,6 @@ public class HistoryManager : MonoBehaviour
                 url = r["data"].SelectToken("profile").First.SelectToken("profileImage").ToString();
                 StartCoroutine(DownloadImage(url, Friend_Image));
             }
-
 
             var a = r["data"].SelectToken("history");
             //List<GameObject> list = new List<GameObject>();

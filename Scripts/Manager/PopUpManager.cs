@@ -14,7 +14,16 @@ public class PopUpManager : MonoBehaviour
     [SerializeField]
     GameObject Alarm_Normal_Icon;
     [SerializeField]
+    GameObject MyHistory_Panel;
+    [SerializeField]
     GameObject FriendHistory_Panel;
+
+    [SerializeField]
+    GameObject Capture_Right_Menu;
+    [SerializeField]
+    GameObject CapturedImage;
+    [SerializeField]
+    GameObject UploadImage;
     // Start is called before the first frame update
     public void OnBellClick()
     {
@@ -36,7 +45,8 @@ public class PopUpManager : MonoBehaviour
     void PopUpCancel()
     {
         Clear(PopUpContent);
-        if (FriendHistory_Panel.activeSelf == false)
+        if (FriendHistory_Panel.activeSelf == false && MyHistory_Panel.activeSelf == false 
+            && Capture_Right_Menu.activeSelf == false && CapturedImage.activeSelf == false && UploadImage.activeSelf == false)
         {
             HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
             .OnPlayButtonClick();

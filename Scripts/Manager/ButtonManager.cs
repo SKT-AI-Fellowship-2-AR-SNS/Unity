@@ -52,18 +52,21 @@ public class ButtonManager : MonoBehaviour
     }
     public void OnMyHistoryBackClick()
     {
-        if (HoloLensFaceDetectionExample.gameObject.activeSelf == true)
-        {
-            HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
-            .OnPlayButtonClick();
-        }
-        MyHistory_Panel.SetActive(false);
         //content1.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
         content2.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
         Clear(content1);
         Clear(content2);
         Clear(content5);
         Clear(MyCommentContent);
+        MyHistory_Panel.SetActive(false);
+        if (HoloLensFaceDetectionExample.gameObject.activeSelf == true)
+        {
+            HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
+            .OnPlayButtonClick();
+            HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
+                .IsCapturing = false;
+        }
+
     }
     public void OnfriendHistoryClick(string uid = "")
     {
@@ -88,18 +91,20 @@ public class ButtonManager : MonoBehaviour
     }
     public void OnfriendHistoryBackClick()
     {
-        if (HoloLensFaceDetectionExample.gameObject.activeSelf == true)
-        {
-            HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
-            .OnPlayButtonClick();
-        }
-        FriendHistory_Panel.SetActive(false);
         //content3.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
         content4.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
         Clear(content3);
         Clear(content4);
         Clear(content6);
         Clear(FriendCommentContent);
+        FriendHistory_Panel.SetActive(false);
+        if (HoloLensFaceDetectionExample.gameObject.activeSelf == true)
+        {
+            HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
+            .OnPlayButtonClick();
+            HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
+                .IsCapturing = false;
+        }
     }
     public void OnfriendHistoryLocClick(string uid = "")
     {

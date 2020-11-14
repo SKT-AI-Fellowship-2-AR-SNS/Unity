@@ -11,6 +11,7 @@ using UnityEditor;
 using System.Text.RegularExpressions;
 using System.Text;
 using UnityEngine.Video;
+using DG.Tweening;
 
 public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
 {
@@ -264,6 +265,16 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
         }  
         UploadImage.transform.GetChild(2).GetComponent<Text>().text = Location_Text.GetComponent<Text>().text;
         UploadImage.transform.GetChild(3).GetComponent<Text>().text = Time_Text.GetComponent<Text>().text;
+        
+        CapturedImage.transform.GetChild(2).GetComponent<RectTransform>().localPosition =
+            new Vector3(-100, 50, 0);
+        CapturedImage.transform.GetChild(3).GetComponent<RectTransform>().localPosition =
+            new Vector3(0, 50, 0);
+        CapturedImage.transform.GetChild(4).GetComponent<RectTransform>().localPosition =
+            new Vector3(0, -50, 0);
+        CapturedImage.transform.GetChild(2).gameObject.SetActive(false);
+        CapturedImage.transform.GetChild(3).gameObject.SetActive(false);
+        CapturedImage.transform.GetChild(4).gameObject.SetActive(false);
         CapturedImage.SetActive(false);
         UploadImage.SetActive(true);
     }
@@ -290,8 +301,21 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
         {
             TagList += s+",";
         }
-        if(IsPrivate==0) form.Add(new MultipartFormDataSection("list", TagList));
-        else form.Add(new MultipartFormDataSection("list", "-1"));
+        if (IsPrivate == 0)
+        {
+            if (TagList.Length > 0)
+            {
+                form.Add(new MultipartFormDataSection("list", TagList));
+            }
+            else
+            {
+                form.Add(new MultipartFormDataSection("list", "-1"));
+            }
+        }
+        else
+        {
+            form.Add(new MultipartFormDataSection("list", "-1"));
+        }
         UnityWebRequest www = UnityWebRequest.Post(url, form);
 
         yield return www.SendWebRequest();
@@ -317,6 +341,8 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
         {
             HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
             .OnPlayButtonClick();
+            HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
+                .IsCapturing = false;
         }
     }
     public void OnCaptureDeleteClick()
@@ -337,7 +363,16 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
             VideoCapture_Icon.SetActive(true);
             VideoCapture_Icon2.SetActive(false);
         }
-            
+        CapturedImage.transform.GetChild(2).GetComponent<RectTransform>().localPosition =
+            new Vector3(-100, 50, 0);
+        CapturedImage.transform.GetChild(3).GetComponent<RectTransform>().localPosition =
+            new Vector3(0, 50, 0);
+        CapturedImage.transform.GetChild(4).GetComponent<RectTransform>().localPosition =
+            new Vector3(0, -50, 0);
+        CapturedImage.transform.GetChild(2).gameObject.SetActive(false);
+        CapturedImage.transform.GetChild(3).gameObject.SetActive(false);
+        CapturedImage.transform.GetChild(4).gameObject.SetActive(false);
+
         CapturedImage.SetActive(false);
     }
     public void OnUploadImageBack()
@@ -660,8 +695,6 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
             {
                 HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
                 .OnPlayButtonClick();
-            HoloLensFaceDetectionExample.GetComponent<HoloLensWithOpenCVForUnityExample.HoloLensFaceDetectionExample>()
-                .IsCapturing = false;
             }
 
         }
@@ -695,10 +728,15 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
             }
             CapturedImage.transform.GetChild(3).GetComponent<Text>().text = Location_Text.GetComponent<Text>().text;
             CapturedImage.transform.GetChild(4).GetComponent<Text>().text = Time_Text.GetComponent<Text>().text;
+
             CapturedImage.transform.GetChild(2).gameObject.SetActive(true);
             CapturedImage.transform.GetChild(3).gameObject.SetActive(true);
+            CapturedImage.transform.GetChild(3).GetComponent<Text>().text = Location_Text.GetComponent<Text>().text;
             CapturedImage.transform.GetChild(4).gameObject.SetActive(true);
-            
+            CapturedImage.transform.GetChild(4).GetComponent<Text>().text = Time_Text.GetComponent<Text>().text;
+            StartCoroutine(LerpPosCapture(CapturedImage.transform.GetChild(2).gameObject,new Vector3(-100,80,0)));
+            StartCoroutine(LerpPosCapture(CapturedImage.transform.GetChild(3).gameObject, new Vector3(0, 80, 0)));
+            StartCoroutine(LerpPosCapture(CapturedImage.transform.GetChild(4).gameObject, new Vector3(0, -80, 0)));
             StartCoroutine(LerpPos(v, 1));
         }
         else
@@ -714,6 +752,18 @@ public class CaptureManager : SingletonMonoBehaviour<CaptureManager>
                 progress += increment;
                 yield return new WaitForSeconds(smoothness);
             }
+        }
+    }
+    IEnumerator LerpPosCapture(GameObject g, Vector2 v)
+    {
+        float progress = 0; //This float will serve as the 3rd parameter of the lerp function.
+        float increment = smoothness / duration; //The amount of change to apply.
+
+        while (progress < 1)
+        {
+            g.GetComponent<RectTransform>().localPosition = Vector2.Lerp(g.GetComponent<RectTransform>().localPosition, v, progress);
+            progress += increment;
+            yield return new WaitForSeconds(smoothness);
         }
     }
     void PopUpCancel()
